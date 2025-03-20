@@ -1,3 +1,6 @@
+import com.android.build.api.dsl.Packaging
+
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -37,7 +40,16 @@ android {
     buildFeatures {
         compose = true
     }
+
     buildToolsVersion = "35.0.0"
+    // **** Add this block to exclude META-INF/INDEX.LIST ****
+    // If more duplicates show up, you can exclude them here as well.
+    packaging() {
+        resources {
+            excludes += "META-INF/INDEX.LIST"
+            excludes += "META-INF/io.netty.versions.properties"
+        }
+    }
 }
 
 dependencies {
