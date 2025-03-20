@@ -16,6 +16,8 @@ class DriverActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_driver)
 
+        title = "Driver Page"
+
         val switchDriversButton: Button = findViewById(R.id.switchingDriversButton)
         switchDriversButton.setOnClickListener {
             // maybe call something like switchDrivers()
