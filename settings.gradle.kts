@@ -21,4 +21,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "SafeRidesApplication"
 include(":app")
- 
+include(":backend")
