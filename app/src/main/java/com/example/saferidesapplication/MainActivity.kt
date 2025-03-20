@@ -1,47 +1,48 @@
 package com.example.saferidesapplication
 
+import android.content.Intent
 import android.os.Bundle
+import android.widget.Button
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import com.example.saferidesapplication.ui.theme.SafeRidesApplicationTheme
+import androidx.lifecycle.lifecycleScope
+import com.example.saferidesapplication.network.ApiClient
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        setContent {
-            SafeRidesApplicationTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
-            }
+        // If using Compose, setContent {...}; or if using XML:
+        setContentView(R.layout.activity_main)
+
+        // Suppose you have two buttons: driverButton and passengerButton
+        val driverButton: Button = findViewById(R.id.driverButton)
+        driverButton.setOnClickListener {
+            // Navigate to a dedicated DriverActivity
+            val intent = Intent(this, DriverActivity::class.java)
+            startActivity(intent)
+        }
+
+        val passengerButton: Button = findViewById(R.id.passengerButton)
+        passengerButton.setOnClickListener {
+            // e.g., you might do registerPassenger() here or go to a PassengerActivity
+            registerPassenger()
         }
     }
-}
 
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    SafeRidesApplicationTheme {
-        Greeting("Android")
+    private fun registerPassenger() {
+        lifecycleScope.launch {
+            try {
+                val response = ApiClient.apiService.registerPassenger()
+                if (response.isSuccessful) {
+                    val body = response.body()
+                    // Show toast or navigate to next screen
+                } else {
+                    // Show error
+                }
+            } catch (e: Exception) {
+                // Show error
+            }
+        }
     }
 }
