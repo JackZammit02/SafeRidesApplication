@@ -7,7 +7,7 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.lifecycle.lifecycleScope
 import com.example.saferidesapplication.network.ApiClient
-import com.example.saferidesapplication.network.RegisterRequest
+import com.example.saferidesapplication.network.dto.CreateUserRequest
 import kotlinx.coroutines.launch
 
 class DriverActivity : ComponentActivity() {
@@ -33,32 +33,25 @@ class DriverActivity : ComponentActivity() {
         // but typically you'd do it earlier in the flow, or from a separate "RegisterDriver" screen.
     }
 
-    private fun registerDriver() {
+    private fun logInDriver() {
         lifecycleScope.launch {
-            try {
-                val requestBody = RegisterRequest(access_code = "DRIVER123")
-                val response = ApiClient.apiService.registerDriver(requestBody)
-                if (response.isSuccessful) {
-                    val body = response.body()
-                    Toast.makeText(
-                        this@DriverActivity,
-                        "Driver Created! Id = ${body?.userId}",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                } else {
-                    Toast.makeText(
-                        this@DriverActivity,
-                        "Failed: ${response.message()}",
-                        Toast.LENGTH_LONG
-                    ).show()
-                }
-            } catch (e: Exception) {
-                Toast.makeText(
-                    this@DriverActivity,
-                    "Error: ${e.message}",
-                    Toast.LENGTH_LONG
-                ).show()
+            val driverId = "driver123"
+
+            val createReq = CreateUserRequest(
+                id = driverId,
+                name = "Driver Jack",
+                role = "driver",
+                onShift = true
+            )
+
+            val response = ApiClient.apiService.createUser(createReq)
+            if (response.isSuccessful) {
+                Toast.makeText(this@DriverActivity, "Logged in!", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(this@DriverActivity, "Login failed", Toast.LENGTH_LONG).show()
             }
         }
     }
+
+
 }
