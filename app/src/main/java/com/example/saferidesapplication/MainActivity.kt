@@ -20,13 +20,15 @@ class MainActivity : ComponentActivity() {
         val driverButton: Button = findViewById(R.id.driverButton)
         driverButton.setOnClickListener {
             // Navigate to a dedicated DriverActivity
-            val intent = Intent(this, DriverActivity::class.java)
+            val intent = Intent(this, AccessCodeActivity::class.java)
             startActivity(intent)
         }
 
         val passengerButton: Button = findViewById(R.id.passengerButton)
         passengerButton.setOnClickListener {
             // e.g., you might do registerPassenger() here or go to a PassengerActivity
+            val intent = Intent(this,PassengerActivity::class.java)
+            startActivity(intent)
             registerPassenger()
         }
     }
