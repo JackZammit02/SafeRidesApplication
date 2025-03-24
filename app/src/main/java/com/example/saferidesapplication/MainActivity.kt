@@ -7,6 +7,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.lifecycle.lifecycleScope
 import com.example.saferidesapplication.network.ApiClient
+import com.example.saferidesapplication.network.dto.CreateUserRequest
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
@@ -33,10 +34,17 @@ class MainActivity : ComponentActivity() {
     private fun registerPassenger() {
         lifecycleScope.launch {
             try {
-                val response = ApiClient.apiService.registerPassenger()
+                val requestBody = CreateUserRequest(
+                    id = "passenger123",
+                    name = "Jack", // could be dynamic input later
+                    role = "passenger",
+                    onShift = false
+                )
+                val response = ApiClient.apiService.createUser(requestBody)
                 if (response.isSuccessful) {
-                    val body = response.body()
-                    // Show toast or navigate to next screen
+                    // Navigate to PassengerActivity
+                    val intent = Intent(this@MainActivity, PassengerActivity::class.java)
+                    startActivity(intent)
                 } else {
                     // Show error
                 }
@@ -45,4 +53,5 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
 }
