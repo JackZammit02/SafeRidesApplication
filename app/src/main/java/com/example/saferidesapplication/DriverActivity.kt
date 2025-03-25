@@ -16,17 +16,20 @@ class DriverActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_driver)
 
-        title = "Driver Page"
+        title = "Driver's Page"
 
         val switchDriversButton: Button = findViewById(R.id.switchingDriversButton)
         switchDriversButton.setOnClickListener {
-            // maybe call something like switchDrivers()
-        }
 
+        }
         val logOffButton: Button = findViewById(R.id.logOffButton)
         logOffButton.setOnClickListener {
-            // maybe call logoutDriver()
+            val intent = Intent(this, MainActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            startActivity(intent)
+            finish()
         }
+
 
         // If you want to do driver registration from here, you could do:
         // registerDriver()
