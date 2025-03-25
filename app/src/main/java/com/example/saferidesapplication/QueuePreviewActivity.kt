@@ -4,9 +4,10 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import android.widget.TextView
+import androidx.activity.ComponentActivity
 import androidx.appcompat.app.AppCompatActivity
 
-class QueuePreviewActivity : AppCompatActivity() {
+class QueuePreviewActivity : ComponentActivity() {
 
     private lateinit var ridesText: TextView
     private lateinit var waitTimeText: TextView

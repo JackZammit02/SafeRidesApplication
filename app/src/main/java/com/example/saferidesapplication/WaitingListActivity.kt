@@ -3,9 +3,10 @@ package com.example.saferidesapplication
 import android.os.Bundle
 import android.widget.Button
 import android.widget.TextView
+import androidx.activity.ComponentActivity
 import androidx.appcompat.app.AppCompatActivity
 
-class WaitingListActivity : AppCompatActivity() {
+class WaitingListActivity : ComponentActivity() {
 
     private lateinit var ridesAheadText: TextView
     private lateinit var estimatedTimeText: TextView
