@@ -11,7 +11,7 @@ interface ApiService {
     // --- USER ROUTES ---
 
     @POST("/users/create")
-    suspend fun createUser(@Body user: CreateUserRequest): Response<String>
+    suspend fun createUser(@Body user: CreateUserRequest): Response<CreateUserResponse>
 
     @GET("/users/{id}")
     suspend fun getUser(@Path("id") id: String): Response<UserResponse>

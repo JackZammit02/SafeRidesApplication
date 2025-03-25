@@ -2,7 +2,9 @@ package com.example.saferidesapplication
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.widget.Button
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.lifecycle.lifecycleScope
 import com.example.saferidesapplication.network.ApiClient
@@ -36,6 +38,8 @@ class MainActivity : ComponentActivity() {
                     onShift = false
                 )
                 val response = ApiClient.apiService.createUser(requestBody)
+                val bodyString = response.errorBody()?.string() ?: response.body().toString()
+                Log.e("API_RESPONSE", "Raw response: $bodyString")
                 if (response.isSuccessful) {
                     val sharedPreferences = getSharedPreferences("SafeRidesPrefs", MODE_PRIVATE)
                     sharedPreferences.edit().putString("userId", requestBody.id).apply()
@@ -43,10 +47,11 @@ class MainActivity : ComponentActivity() {
                     val intent = Intent(this@MainActivity, PassengerActivity::class.java)
                     startActivity(intent)
                 } else {
-                    // TODO: Show error Toast or dialog
+                    Toast.makeText(this@MainActivity, "User creation failed: ${response.code()}", Toast.LENGTH_LONG).show()
                 }
             } catch (e: Exception) {
-                // TODO: Show error Toast or dialog
+                Toast.makeText(this@MainActivity, "Error: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
+                e.printStackTrace()
             }
         }
     }

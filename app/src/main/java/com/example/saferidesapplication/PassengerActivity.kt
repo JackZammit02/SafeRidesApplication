@@ -107,8 +107,6 @@ class PassengerActivity : ComponentActivity() {
         }
 
 
-
-
         // Initialize the TextView
         driverSwitchTextView = findViewById(R.id.driverSwitchTextView)
 
