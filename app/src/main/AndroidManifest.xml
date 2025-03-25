@@ -20,12 +20,15 @@
             android:name=".AccessCodeActivity"
             android:exported="false" />
         <activity android:name=".QueuePreviewActivity" />
+        <activity android:name=".WaitingListActivity" />
         <activity
             android:name=".DriverActivity"
             android:exported="false" />
         <activity
             android:name=".PassengerActivity"
             android:exported="false" />
+        <activity android:name=".DriverDrivingActivity" />
+        <activity android:name=".DriverWaitingActivity" />
         <activity
             android:name=".MainActivity"
             android:exported="true"
