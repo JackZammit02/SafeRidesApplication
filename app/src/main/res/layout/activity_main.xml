@@ -5,6 +5,15 @@ android:layout_height="match_parent"
 android:orientation="vertical"
 android:gravity="center"
 android:padding="20dp">
+
+    <ImageView
+        android:id="@+id/logoImage"
+        android:layout_width="150dp"
+        android:layout_height="150dp"
+        android:src="@drawable/gustavus_logo"
+        android:contentDescription="Gustavus Adolphus College Logo"
+        android:layout_marginBottom="20dp" />
+
     <TextView
         android:id="@+id/welcomeText"
         android:layout_width="wrap_content"
