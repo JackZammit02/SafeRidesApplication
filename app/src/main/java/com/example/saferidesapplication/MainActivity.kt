@@ -27,6 +27,7 @@ class MainActivity : ComponentActivity() {
         passengerButton.setOnClickListener {
             registerPassenger()
         }
+
     }
 
     private fun registerPassenger() {
