@@ -17,14 +17,9 @@
         android:usesCleartextTraffic="true"
         tools:targetApi="31">
         <activity
-            android:name=".WaitingListActivity.kt"
-            android:exported="false" />
-        <activity
-            android:name=".DriverOnWayActivity"
-            android:exported="false" />
-        <activity
             android:name=".AccessCodeActivity"
             android:exported="false" />
+        <activity android:name=".QueuePreviewActivity" />
         <activity
             android:name=".DriverActivity"
             android:exported="false" />

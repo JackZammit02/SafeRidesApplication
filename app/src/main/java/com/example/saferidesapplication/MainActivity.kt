@@ -23,6 +23,13 @@ class MainActivity : ComponentActivity() {
             startActivity(intent)
         }
 
+        val viewQueueButton: Button = findViewById(R.id.viewQueueButton)
+        viewQueueButton.setOnClickListener {
+            val intent = Intent(this, QueuePreviewActivity::class.java)
+            startActivity(intent)
+        }
+
+
         val passengerButton: Button = findViewById(R.id.passengerButton)
         passengerButton.setOnClickListener {
             registerPassenger()
