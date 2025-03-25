@@ -16,6 +16,12 @@ class AccessCodeActivity : ComponentActivity() {
         // Initialize the views
         val accessCodeInput: EditText = findViewById(R.id.access_code_input)
         val submitButton: Button = findViewById(R.id.submit_button)
+        val exitButton: Button = findViewById(R.id.exit_button)
+
+        exitButton.setOnClickListener {
+            finish() //This closes this activity and returns to the previous one
+        }
+
 
         submitButton.setOnClickListener {
             val accessCode = accessCodeInput.text.toString()
