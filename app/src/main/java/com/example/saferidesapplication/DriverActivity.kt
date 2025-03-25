@@ -41,8 +41,6 @@ class DriverActivity : ComponentActivity() {
             val driverId = "driver123"
 
             val createReq = CreateUserRequest(
-                id = driverId,
-                name = "Driver Jack",
                 role = "driver",
                 onShift = true
             )

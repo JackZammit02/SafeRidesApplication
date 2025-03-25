@@ -9,6 +9,7 @@ import androidx.activity.ComponentActivity
 import androidx.lifecycle.lifecycleScope
 import com.example.saferidesapplication.network.ApiClient
 import com.example.saferidesapplication.network.dto.CreateUserRequest
+import com.example.saferidesapplication.network.dto.CreateUserResponse
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
@@ -32,17 +33,23 @@ class MainActivity : ComponentActivity() {
         lifecycleScope.launch {
             try {
                 val requestBody = CreateUserRequest(
-                    id = "passenger123",
-                    name = "Jack", // Later: use EditText for dynamic name
+                    // Later: use EditText for dynamic name input
                     role = "passenger",
                     onShift = false
+
                 )
+
                 val response = ApiClient.apiService.createUser(requestBody)
-                val bodyString = response.errorBody()?.string() ?: response.body().toString()
-                Log.e("API_RESPONSE", "Raw response: $bodyString")
+
                 if (response.isSuccessful) {
+                    val responseBody = response.body() as CreateUserResponse
+                    val userId = responseBody.userId
+
+                    // Save the generated user ID in SharedPreferences
                     val sharedPreferences = getSharedPreferences("SafeRidesPrefs", MODE_PRIVATE)
-                    sharedPreferences.edit().putString("userId", requestBody.id).apply()
+                    sharedPreferences.edit().putString("userId", userId).apply()
+
+                    Log.d("API_RESPONSE", "User created with ID: $userId")
 
                     val intent = Intent(this@MainActivity, PassengerActivity::class.java)
                     startActivity(intent)
@@ -56,3 +63,4 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
+
