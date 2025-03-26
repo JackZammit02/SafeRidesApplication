@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.widget.Button
 import android.widget.TextView
 import androidx.activity.ComponentActivity
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 
 class WaitingListActivity : ComponentActivity() {
@@ -20,11 +21,23 @@ class WaitingListActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_waiting_list)
 
+        val cancelButton = findViewById<Button>(R.id.cancel_button)
+        cancelButton.setOnClickListener {
+            // Optional: cancel the ride with API call here
+
+            // Go back to the main screen
+            val intent = Intent(this, MainActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            startActivity(intent)
+            finish()
+        }
+
         ridesAheadText = findViewById(R.id.rides_ahead_text)
         estimatedTimeText = findViewById(R.id.estimated_time_text)
         refreshButton = findViewById(R.id.refresh_button)
 
         updateQueueInfo()
+
 
         refreshButton.setOnClickListener {
             // Simulate update or fetch new values
