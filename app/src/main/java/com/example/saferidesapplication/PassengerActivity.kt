@@ -37,6 +37,10 @@ class PassengerActivity : ComponentActivity() {
         val requestRideButton: Button = findViewById(R.id.requestRideButton)
         val sharedPreferences = getSharedPreferences("SafeRidesPrefs", MODE_PRIVATE)
         val passengerId = sharedPreferences.getString("userId", null) ?: "unknown"
+        val backButton = findViewById<Button>(R.id.backButton)
+        backButton.setOnClickListener {
+            finish()
+        }
 
 
         // Sample locations
