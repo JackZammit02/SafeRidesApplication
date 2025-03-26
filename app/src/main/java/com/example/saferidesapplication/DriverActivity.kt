@@ -6,11 +6,20 @@ import android.widget.Button
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.example.saferidesapplication.network.ApiClient
 import com.example.saferidesapplication.network.dto.CreateUserRequest
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 class DriverActivity : ComponentActivity() {
+
+    private lateinit var recyclerView: RecyclerView
+    private val driverId = "driver123" // 👈 update if dynamic later
+    private var pollingJob: Job? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -18,41 +27,60 @@ class DriverActivity : ComponentActivity() {
 
         title = "Driver's Page"
 
-        val switchDriversButton: Button = findViewById(R.id.switchingDriversButton)
-        switchDriversButton.setOnClickListener {
+        // Setup RecyclerView
+        recyclerView = findViewById(R.id.driverRideQueue)
+        recyclerView.layoutManager = LinearLayoutManager(this)
 
-        }
+        // Start polling
+        startPollingQueue()
+
+        val switchDriversButton: Button = findViewById(R.id.switchingDriversButton)
         val logOffButton: Button = findViewById(R.id.logOffButton)
+
+        switchDriversButton.setOnClickListener {
+            // TODO: Handle driver switch
+        }
+
         logOffButton.setOnClickListener {
             val intent = Intent(this, MainActivity::class.java)
             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             startActivity(intent)
             finish()
         }
-
-
-        // If you want to do driver registration from here, you could do:
-        // registerDriver()
-        // but typically you'd do it earlier in the flow, or from a separate "RegisterDriver" screen.
     }
 
-    private fun logInDriver() {
-        lifecycleScope.launch {
-            val driverId = "driver123"
-
-            val createReq = CreateUserRequest(
-                role = "driver",
-                onShift = true
-            )
-
-            val response = ApiClient.apiService.createUser(createReq)
-            if (response.isSuccessful) {
-                Toast.makeText(this@DriverActivity, "Logged in!", Toast.LENGTH_SHORT).show()
-            } else {
-                Toast.makeText(this@DriverActivity, "Login failed", Toast.LENGTH_LONG).show()
+    private fun startPollingQueue() {
+        pollingJob = lifecycleScope.launch {
+            while (isActive) {
+                loadRideQueue()
+                delay(5000)
             }
         }
     }
 
+    private fun loadRideQueue() {
+        lifecycleScope.launch {
+            try {
+                val response = ApiClient.apiService.getAllRides()
+                if (response.isSuccessful && response.body() != null) {
+                    val rides = response.body()!!
+                        .filter {
+                            it.status == "queued" || (it.status == "assigned" && it.driverId == driverId)
+                        }
+                        .sortedByDescending { it.timestamp }
 
+                    recyclerView.adapter = RideQueueAdapter(rides, driverId, isDriverView = true)
+                } else {
+                    Toast.makeText(this@DriverActivity, "Could not load rides", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(this@DriverActivity, "Error: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        pollingJob?.cancel()
+    }
 }

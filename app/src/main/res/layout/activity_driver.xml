@@ -1,10 +1,12 @@
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="20dp">
 
+    <!-- Title -->
 
     <TextView
         android:id="@+id/pickupsTitle"
@@ -13,78 +15,57 @@
         android:text="Pick ups"
         android:textSize="30sp"
         android:textStyle="bold"
-        android:layout_marginBottom="8dp"
-        app:layout_constraintBottom_toTopOf="@+id/infoBox"
+        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <LinearLayout
-        android:id="@+id/infoBox"
+
+    <!-- RecyclerView for the queue -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/driverRideQueue"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp"
-        android:elevation="4dp"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="12dp"
+        android:padding="8dp"
+        app:layout_constraintTop_toBottomOf="@id/pickupsTitle"
+        app:layout_constraintBottom_toTopOf="@id/hereButton"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+        app:layout_constraintEnd_toEndOf="parent" />
 
-        <TextView
-            android:id="@+id/passengerCount"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Passengers: 1"
-            android:textSize="18sp"
-            android:layout_marginBottom="8dp"
-            android:textStyle="bold" />
+    <!-- Main action button -->
 
-        <TextView
-            android:id="@+id/pickupLocation"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Pick-up: College view"
-            android:textSize="18sp"
-            android:layout_marginBottom="8dp" />
-
-        <TextView
-            android:id="@+id/dropOffLocation"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Drop-off: North hall"
-            android:textSize="18sp" />
-    </LinearLayout>
-
-
+    <!-- Switch drivers -->
     <Button
         android:id="@+id/hereButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="40dp"
+        android:layout_marginTop="212dp"
+        android:layout_marginBottom="16dp"
         android:text="At pick up location"
         android:textSize="18sp"
+        app:layout_constraintBottom_toTopOf="@+id/switchingDriversButton"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.496"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/infoBox" />
+        app:layout_constraintStart_toStartOf="parent" />
 
     <Button
         android:id="@+id/switchingDriversButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="8dp"
-        android:layout_marginBottom="24dp"
+        android:layout_marginBottom="16dp"
         android:text="Switch Driver"
         android:textSize="20sp"
         app:layout_constraintBottom_toTopOf="@+id/logOffButton"
         app:layout_constraintEnd_toEndOf="parent" />
 
+    <!-- Log out -->
     <Button
         android:id="@+id/logOffButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize="20sp"
         android:text="Log Out"
+        android:textSize="20sp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        app:layout_constraintEnd_toEndOf="parent" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

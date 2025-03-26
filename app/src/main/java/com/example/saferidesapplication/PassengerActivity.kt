@@ -3,25 +3,24 @@ package com.example.saferidesapplication
 import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.View
-import android.widget.ArrayAdapter
-import android.widget.Button
-import android.widget.Spinner
-import android.widget.TextView
-import android.widget.Toast
+import android.widget.*
 import androidx.activity.ComponentActivity
 import androidx.activity.enableEdgeToEdge
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import com.example.saferidesapplication.R.id.requestRideButton
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.example.saferidesapplication.network.ApiClient
 import com.example.saferidesapplication.network.dto.RideRequest
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import retrofit2.HttpException
 
 class PassengerActivity : ComponentActivity() {
     private lateinit var driverSwitchTextView: TextView
+    private var pollingJob: Job? = null
+    private lateinit var passengerId: String
+    private lateinit var recyclerView: RecyclerView
 
     @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -36,16 +35,21 @@ class PassengerActivity : ComponentActivity() {
         val passengerCountSpinner: Spinner = findViewById(R.id.passengerCountSpinner)
         val requestRideButton: Button = findViewById(R.id.requestRideButton)
         val sharedPreferences = getSharedPreferences("SafeRidesPrefs", MODE_PRIVATE)
-        val passengerId = sharedPreferences.getString("userId", null) ?: "unknown"
+        passengerId = sharedPreferences.getString("userId", null) ?: "unknown"
 
+        recyclerView = findViewById(R.id.rideQueueRecyclerView)
+        recyclerView.layoutManager = LinearLayoutManager(this)
 
-        // Sample locations
-        val locations = listOf("Norelius Hall", "Three Flags Circle", "North Hall", "7th Street Houses",
+        // Start polling the queue every few seconds
+        startPollingQueue()
+
+        val locations = listOf(
+            "Norelius Hall", "Three Flags Circle", "North Hall", "7th Street Houses",
             "Rundstrom Hall", "Sohre Hall", "Arbor View Apartments", "Music Building South", "Nobel Hall",
-            "Chapel Circle", "International Center", "Lund Center", "College View Apartments", "Chapel View Townhomes")
+            "Chapel Circle", "International Center", "Lund Center", "College View Apartments", "Chapel View Townhomes"
+        )
         val passengerCounts = listOf("1", "2", "3", "4")
 
-        // Populate dropdowns
         val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, locations)
         pickupSpinner.adapter = adapter
         dropOffSpinner.adapter = adapter
@@ -53,7 +57,6 @@ class PassengerActivity : ComponentActivity() {
         val passengerAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, passengerCounts)
         passengerCountSpinner.adapter = passengerAdapter
 
-        // Inside onCreate, where you already have:
         requestRideButton.setOnClickListener {
             val pickup = pickupSpinner.selectedItem.toString()
             val dropOff = dropOffSpinner.selectedItem.toString()
@@ -81,8 +84,8 @@ class PassengerActivity : ComponentActivity() {
                             Toast.LENGTH_LONG
                         ).show()
 
-                        val createdRide = response.body()!!
-                        println("Created Ride ID: ${createdRide.rideId}")
+                        // Immediately refresh queue
+                        loadRideQueue()
                     } else {
                         Toast.makeText(
                             this@PassengerActivity,
@@ -106,8 +109,6 @@ class PassengerActivity : ComponentActivity() {
             }
         }
 
-
-        // Initialize the TextView
         driverSwitchTextView = findViewById(R.id.driverSwitchTextView)
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
@@ -115,16 +116,45 @@ class PassengerActivity : ComponentActivity() {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
-
-        // Example: Call this function when you detect a driver switch
-        //updateDriverSwitchStatus(t)  // Set to 'true' when drivers are switching
     }
 
-    public fun updateDriverSwitchStatus(isSwitching: Boolean) {
+    private fun startPollingQueue() {
+        pollingJob = lifecycleScope.launch {
+            while (isActive) {
+                loadRideQueue()
+                delay(5000) // 5 seconds
+            }
+        }
+    }
+
+    private fun loadRideQueue() {
+        lifecycleScope.launch {
+            try {
+                val response = ApiClient.apiService.getAllRides()
+                if (response.isSuccessful && response.body() != null) {
+                    val queuedRides = response.body()!!
+                        .filter { it.status == "queued" }
+                        .sortedByDescending { it.timestamp }
+                    recyclerView.adapter = RideQueueAdapter(queuedRides, passengerId, isDriverView = false)
+                } else {
+                    Toast.makeText(this@PassengerActivity, "Could not load queue", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(this@PassengerActivity, "Error: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        pollingJob?.cancel()
+    }
+
+    fun updateDriverSwitchStatus(isSwitching: Boolean) {
         if (isSwitching) {
-            driverSwitchTextView.visibility = View.VISIBLE  // Show message
+            driverSwitchTextView.visibility = View.VISIBLE
         } else {
-            driverSwitchTextView.visibility = View.GONE  // Hide message
+            driverSwitchTextView.visibility = View.GONE
         }
     }
 }
