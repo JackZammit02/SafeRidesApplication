@@ -35,6 +35,11 @@ class PassengerActivity : ComponentActivity() {
         val passengerCountSpinner: Spinner = findViewById(R.id.passengerCountSpinner)
         val requestRideButton: Button = findViewById(R.id.requestRideButton)
         val sharedPreferences = getSharedPreferences("SafeRidesPrefs", MODE_PRIVATE)
+        val backButton = findViewById<Button>(R.id.backButton)
+        backButton.setOnClickListener {
+            finish()
+        }
+
         passengerId = sharedPreferences.getString("userId", null) ?: "unknown"
 
         recyclerView = findViewById(R.id.rideQueueRecyclerView)
