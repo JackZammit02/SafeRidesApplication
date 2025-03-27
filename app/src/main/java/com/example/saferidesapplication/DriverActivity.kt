@@ -9,7 +9,9 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.saferidesapplication.network.ApiClient
+import com.example.saferidesapplication.network.ApiClient.apiService
 import com.example.saferidesapplication.network.dto.CreateUserRequest
+import com.example.saferidesapplication.network.dto.ShiftUpdateRequest
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -38,8 +40,28 @@ class DriverActivity : ComponentActivity() {
         val logOffButton: Button = findViewById(R.id.logOffButton)
 
         switchDriversButton.setOnClickListener {
-            // TODO: Handle driver switch
+            // Replace with the actual driver ID
+            val request = ShiftUpdateRequest(false/* Provide necessary shift details here */)
+
+            // Use a coroutine to make the API call
+            lifecycleScope.launch {
+                try {
+                    val response = apiService.updateDriverShift(driverId, request)
+                    if (response.isSuccessful) {
+                        Toast.makeText(this@DriverActivity, "Driver switched successfully", Toast.LENGTH_SHORT).show()
+                        val intent = Intent(this@DriverActivity, MainActivity::class.java)
+                        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                        startActivity(intent)
+                        finish()
+                    } else {
+                        Toast.makeText(this@DriverActivity, "Failed to switch driver", Toast.LENGTH_SHORT).show()
+                    }
+                } catch (e: Exception) {
+                    Toast.makeText(this@DriverActivity, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
+            }
         }
+
 
         logOffButton.setOnClickListener {
             val intent = Intent(this, MainActivity::class.java)
