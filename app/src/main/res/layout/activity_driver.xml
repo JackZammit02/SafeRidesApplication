@@ -41,28 +41,32 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="212dp"
         android:layout_marginBottom="16dp"
-        android:text="At pick up location"
+        android:text="Next Ride"
         android:textSize="18sp"
         app:layout_constraintBottom_toTopOf="@+id/switchingDriversButton"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.496"
         app:layout_constraintStart_toStartOf="parent" />
 
+    <!-- Log out -->
+
     <Button
         android:id="@+id/switchingDriversButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
+        android:layout_marginEnd="96dp"
+        android:layout_marginBottom="8dp"
         android:text="Switch Driver"
         android:textSize="20sp"
         app:layout_constraintBottom_toTopOf="@+id/logOffButton"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- Log out -->
     <Button
         android:id="@+id/logOffButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginEnd="124dp"
+        android:layout_marginBottom="4dp"
         android:text="Log Out"
         android:textSize="20sp"
         app:layout_constraintBottom_toBottomOf="parent"
