@@ -1,42 +1,77 @@
 package com.example.saferidesapplication
 
-import android.content.Intent
 import android.os.Bundle
+import android.view.View
 import android.widget.Button
-import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.ComponentActivity
-import androidx.appcompat.app.AppCompatActivity
+import androidx.activity.enableEdgeToEdge
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.example.saferidesapplication.network.ApiClient
+import kotlinx.coroutines.*
+import retrofit2.HttpException
+
 
 class QueuePreviewActivity : ComponentActivity() {
-
-    private lateinit var ridesText: TextView
-    private lateinit var waitTimeText: TextView
-    private lateinit var requestRideButton: Button
-    private lateinit var backButton: Button
-
-    private var currentRides = 5
-    private var estimatedWait = 20 // in minutes
+    private lateinit var recyclerView: RecyclerView
+    private var pollingJob: Job? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
         setContentView(R.layout.activity_queue_preview)
 
-        ridesText = findViewById(R.id.preview_rides_ahead)
-        waitTimeText = findViewById(R.id.preview_estimated_time)
-        requestRideButton = findViewById(R.id.requestRideButton)
-        backButton = findViewById(R.id.backButton)
+        title = "Queue Preview"
 
-        ridesText.text = "$currentRides rides currently in the queue"
-        waitTimeText.text = "Estimated wait time: $estimatedWait minutes"
+        recyclerView = findViewById(R.id.queueRecyclerView)
+        recyclerView.layoutManager = LinearLayoutManager(this)
 
-        requestRideButton.setOnClickListener {
-            val intent = Intent(this, PassengerActivity::class.java)
-            startActivity(intent)
-            finish()
+        val backButton: Button = findViewById(R.id.backButton)
+        backButton.setOnClickListener { finish() }
+
+        startPollingQueue()
+
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+            insets
         }
+    }
 
-        backButton.setOnClickListener {
-            finish()
+    private fun startPollingQueue() {
+        pollingJob = lifecycleScope.launch {
+            while (isActive) {
+                loadRideQueue()
+                delay(5000) // Poll every 5 seconds
+            }
         }
+    }
+
+    private fun loadRideQueue() {
+        lifecycleScope.launch {
+            try {
+                val response = ApiClient.apiService.getAllRides()
+                if (response.isSuccessful && response.body() != null) {
+                    val queuedRides = response.body()!!.filter { it.status == "queued" }
+                        .sortedByDescending { it.timestamp }
+                    recyclerView.adapter = RideQueueAdapter(queuedRides, "", isDriverView = false)
+                } else {
+                    Toast.makeText(this@QueuePreviewActivity, "Could not load queue", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: HttpException) {
+                Toast.makeText(this@QueuePreviewActivity, "HTTP error: ${e.message()}", Toast.LENGTH_LONG).show()
+            } catch (e: Exception) {
+                Toast.makeText(this@QueuePreviewActivity, "Error: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        pollingJob?.cancel()
     }
 }

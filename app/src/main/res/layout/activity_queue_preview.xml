@@ -1,67 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:gravity="center"
-    android:padding="24dp"
-    android:background="@android:color/white">
+    android:padding="16dp">
 
-    <TextView
-        android:id="@+id/preview_title"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Current Ride Queue"
-        android:textSize="24sp"
-        android:textStyle="bold"
-        android:layout_marginBottom="16dp"
-        android:gravity="center" />
-
-    <TextView
-        android:id="@+id/preview_rides_ahead"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="5 rides currently in the queue"
-        android:textSize="20sp"
-        android:textColor="@android:color/black"
-        android:layout_marginBottom="12dp" />
-
-    <TextView
-        android:id="@+id/preview_estimated_time"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Estimated wait time: 20 minutes"
-        android:textSize="18sp"
-        android:textColor="@android:color/darker_gray"
-        android:layout_marginBottom="24dp" />
-
-    <Button
-        android:id="@+id/requestRideButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Request a Ride"
-        android:textSize="16sp"
-        android:backgroundTint="@color/purple_500"
-        android:textColor="@android:color/white"
-        android:paddingLeft="24dp"
-        android:paddingRight="24dp"
-        android:paddingTop="12dp"
-        android:paddingBottom="12dp"
-        android:layout_marginTop="16dp" />
-
-    <!-- BACK BUTTON -->
     <Button
         android:id="@+id/backButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Back"
-        android:textSize="14sp"
-        android:layout_marginTop="20dp"
-        android:backgroundTint="@android:color/darker_gray"
-        android:textColor="@android:color/white"
-        android:paddingLeft="20dp"
-        android:paddingRight="20dp"
-        android:paddingTop="10dp"
-        android:paddingBottom="10dp" />
+        android:text="Back" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/queueRecyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
 
 </LinearLayout>

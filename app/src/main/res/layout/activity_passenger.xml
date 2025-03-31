@@ -104,6 +104,17 @@
             android:layout_marginTop="12dp"
             android:padding="8dp" />
 
+        <TextView
+            android:id="@+id/passengerRideStatusTextView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Your ride is in position: -"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:padding="8dp"
+            android:gravity="center"/>
+
+
         <!-- Request Ride button -->
         <Button
             android:id="@+id/requestRideButton"

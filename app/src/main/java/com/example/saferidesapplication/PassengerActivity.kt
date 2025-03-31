@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.saferidesapplication.network.ApiClient
 import com.example.saferidesapplication.network.dto.RideRequest
+import com.example.saferidesapplication.network.dto.RideResponse
 import kotlinx.coroutines.*
 import retrofit2.HttpException
 
@@ -136,11 +137,18 @@ class PassengerActivity : ComponentActivity() {
         lifecycleScope.launch {
             try {
                 val response = ApiClient.apiService.getAllRides()
-                if (response.isSuccessful && response.body() != null) {
-                    val queuedRides = response.body()!!
-                        .filter { it.status == "queued" }
-                        .sortedByDescending { it.timestamp }
-                    recyclerView.adapter = RideQueueAdapter(queuedRides, passengerId, isDriverView = false)
+                if (response.isSuccessful) {
+                    val rideList = response.body()
+
+                    if (rideList != null) {
+                        val queuedRides: List<RideResponse> = rideList.filter { it.status == "queued" }
+                            .sortedBy { it.timestamp } // Ensure new requests go to the bottom
+
+                        recyclerView.adapter = RideQueueAdapter(queuedRides, passengerId, isDriverView = false)
+
+                        // Ensure `queuedRides` is correctly typed before passing
+                        updatePassengerRidePosition(queuedRides)
+                    }
                 } else {
                     Toast.makeText(this@PassengerActivity, "Could not load queue", Toast.LENGTH_SHORT).show()
                 }
@@ -149,6 +157,24 @@ class PassengerActivity : ComponentActivity() {
             }
         }
     }
+
+
+    private fun updatePassengerRidePosition(queuedRides: List<RideResponse>) {
+        val passengerRideStatusTextView: TextView = findViewById(R.id.passengerRideStatusTextView)
+
+        // Find the index of the passenger's ride in the sorted queue
+        val passengerRideIndex = queuedRides.indexOfFirst { it.passengerId == passengerId }
+
+        // Update the text view with the ride position
+        passengerRideStatusTextView.text = if (passengerRideIndex != -1) {
+            "Your ride is in position: ${passengerRideIndex + 1}"
+        } else {
+            "Your ride is not in the queue"
+        }
+    }
+
+
+
 
     override fun onDestroy() {
         super.onDestroy()
@@ -162,4 +188,6 @@ class PassengerActivity : ComponentActivity() {
             driverSwitchTextView.visibility = View.GONE
         }
     }
+
+
 }

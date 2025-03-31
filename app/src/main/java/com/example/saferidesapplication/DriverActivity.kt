@@ -62,7 +62,6 @@ class DriverActivity : ComponentActivity() {
             }
         }
 
-
         logOffButton.setOnClickListener {
             val intent = Intent(this, MainActivity::class.java)
             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
@@ -75,7 +74,7 @@ class DriverActivity : ComponentActivity() {
         pollingJob = lifecycleScope.launch {
             while (isActive) {
                 loadRideQueue()
-                delay(5000)
+                delay(5000) // Poll every 5 seconds
             }
         }
     }
@@ -89,7 +88,7 @@ class DriverActivity : ComponentActivity() {
                         .filter {
                             it.status == "queued" || (it.status == "assigned" && it.driverId == driverId)
                         }
-                        .sortedByDescending { it.timestamp }
+                        .sortedBy { it.timestamp } // Sort by ascending timestamp (oldest first)
 
                     recyclerView.adapter = RideQueueAdapter(rides, driverId, isDriverView = true)
                 } else {
