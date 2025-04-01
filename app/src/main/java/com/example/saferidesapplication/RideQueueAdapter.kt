@@ -60,13 +60,26 @@ class RideQueueAdapter(
             holder.pickupText.text = "Pickup: ${ride.pickupLocation}"
             holder.dropoffText.text = "Dropoff: ${ride.dropoffLocation}"
             holder.passengerCountText.text = "Passengers: ${ride.passengerCount}"
-            if (
-                (!isDriverView && ride.passengerId == currentUserId) ||
-                (isDriverView && ride.driverId == currentUserId && ride.status == "assigned")
-            ) {
-                holder.card.setCardBackgroundColor(Color.parseColor("#C8E6C9")) // green
+            if (!isDriverView) {
+                // Passenger view: highlight their own ride
+                if (ride.passengerId == currentUserId) {
+                    holder.card.setCardBackgroundColor(Color.parseColor("#C8E6C9")) // green
+                } else {
+                    holder.card.setCardBackgroundColor(Color.WHITE)
+                }
             } else {
-                holder.card.setCardBackgroundColor(Color.WHITE)
+                // Driver view
+                when {
+                    ride.driverId == currentUserId && ride.status == "in_progress" -> {
+                        holder.card.setCardBackgroundColor(Color.parseColor("#C8E6C9")) // green for current in-progress ride
+                    }
+                    position == 0 && ride.status == "queued" -> {
+                        holder.card.setCardBackgroundColor(Color.parseColor("#FFECB3")) // light orange for the next ride
+                    }
+                    else -> {
+                        holder.card.setCardBackgroundColor(Color.WHITE)
+                    }
+                }
             }
         } else if (holder is FooterViewHolder) {
             holder.footerText.text = "+$hiddenCount more rides..."

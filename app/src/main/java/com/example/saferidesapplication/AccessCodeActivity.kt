@@ -18,6 +18,7 @@ class AccessCodeActivity : ComponentActivity() {
         val submitButton: Button = findViewById(R.id.submit_button)
         val exitButton: Button = findViewById(R.id.exit_button)
 
+
         exitButton.setOnClickListener {
             finish() //This closes this activity and returns to the previous one
         }

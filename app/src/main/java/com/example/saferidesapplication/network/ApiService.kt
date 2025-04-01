@@ -38,4 +38,13 @@ interface ApiService {
         @Path("rideId") rideId: String,
         @Body request: CancelRideRequest
     ): Response<String>
+
+    @POST("/access-code")
+    suspend fun  verifyAccessCode(@Body code:AccessCode):Response<String>
+
+    @POST("/rides/{rideId}/status")
+    suspend fun updateRideStatus(
+        @Path("rideId") rideId: String,
+        @Query("status") status: String
+    ): Response<String>
 }
