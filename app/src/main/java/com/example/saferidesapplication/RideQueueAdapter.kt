@@ -70,8 +70,8 @@ class RideQueueAdapter(
             } else {
                 // Driver view
                 when {
-                    ride.driverId == currentUserId && ride.status == "in_progress" -> {
-                        holder.card.setCardBackgroundColor(Color.parseColor("#C8E6C9")) // green for current in-progress ride
+                    ride.driverId == currentUserId && ride.status in listOf("assigned", "arrived", "picked_up", "in_progress") -> {
+                        holder.card.setCardBackgroundColor(Color.parseColor("#C8E6C9")) // green
                     }
                     position == 0 && ride.status == "queued" -> {
                         holder.card.setCardBackgroundColor(Color.parseColor("#FFECB3")) // light orange for the next ride

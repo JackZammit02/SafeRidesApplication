@@ -47,4 +47,6 @@ interface ApiService {
         @Path("rideId") rideId: String,
         @Query("status") status: String
     ): Response<String>
+
+
 }

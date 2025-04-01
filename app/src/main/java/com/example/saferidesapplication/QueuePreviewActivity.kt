@@ -56,6 +56,7 @@ class QueuePreviewActivity : ComponentActivity() {
             try {
                 val response = ApiClient.apiService.getAllRides()
                 if (response.isSuccessful && response.body() != null) {
+
                     val queuedRides = response.body()!!.filter { it.status == "queued" }
                         .sortedByDescending { it.timestamp }
                     recyclerView.adapter = RideQueueAdapter(queuedRides, "", isDriverView = false)
