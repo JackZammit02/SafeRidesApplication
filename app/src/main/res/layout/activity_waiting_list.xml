@@ -52,15 +52,16 @@
         android:textSize="18sp"
         android:backgroundTint="@color/purple_500"
         android:textColor="@android:color/white" />
+
     <Button
         android:id="@+id/cancel_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Cancel Ride"
-        android:textSize="18sp"
         android:layout_marginTop="16dp"
         android:backgroundTint="@android:color/darker_gray"
-        android:textColor="@android:color/white" />
+        android:text="Cancel Ride"
+        android:textColor="@android:color/white"
+        android:textSize="18sp" />
 
 
 </LinearLayout>

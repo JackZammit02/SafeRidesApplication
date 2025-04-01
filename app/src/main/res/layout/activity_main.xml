@@ -1,79 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:card_view="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+    <!-- Background Image -->
     <ImageView
         android:id="@+id/backgroundImage"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:scaleType="centerCrop"
         android:src="@drawable/background"
-        android:contentDescription="Campus background"
-        android:alpha="0.2" />
+        android:alpha="0.25"
+        android:contentDescription="Campus background" />
 
+    <!-- Main content vertically centered -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
-        android:gravity="center"
-        android:padding="20dp">
+        android:gravity="center_horizontal"
+        android:padding="24dp">
 
         <TextView
             android:id="@+id/welcomeText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Welcome to the Safe Rides App at Gustavus Adolphus College."
-            android:textSize="20sp"
-            android:textStyle="bold"
+            android:text="Welcome to the Safe Rides App at\nGustavus Adolphus College."
+            android:textSize="18sp"
             android:textAlignment="center"
-            android:paddingBottom="20dp"
-            android:textColor="@android:color/black"/>
+            android:textStyle="bold"
+            android:textColor="@android:color/black"
+            android:gravity="center"
+            android:layout_marginTop="40dp"
+            android:layout_marginBottom="20dp" />
 
         <ImageView
             android:id="@+id/logoImage"
-            android:layout_width="150dp"
-            android:layout_height="150dp"
+            android:layout_width="120dp"
+            android:layout_height="120dp"
             android:src="@drawable/gustavus_logo"
-            android:contentDescription="Gustavus Adolphus College Logo"
-            android:layout_marginBottom="20dp" />
+            android:contentDescription="Gustavus Logo"
+            android:layout_marginBottom="24dp" />
 
         <TextView
             android:id="@+id/PickText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="To get started, pick whether you are a driver or a passenger:"
-            android:textSize="28sp"
+            android:text="Click the icon below to get started"
+            android:textSize="22sp"
             android:textAlignment="center"
-            android:paddingBottom="20dp"
             android:textStyle="bold"
-            android:textColor="@android:color/black"/>
+            android:textColor="@android:color/black"
+            android:gravity="center"
+            android:layout_marginBottom="30dp" />
 
-        <LinearLayout
+        <androidx.cardview.widget.CardView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center"
-            android:layout_marginTop="20dp">
+            android:layout_marginBottom="30dp"
+            android:elevation="8dp"
+            card_view:cardCornerRadius="50dp"
+            card_view:cardBackgroundColor="@android:color/transparent">
 
-            <Button
-                android:id="@+id/driverButton"
-                android:layout_width="100dp"
-                android:layout_height="100dp"
-                android:backgroundTint="@color/button_blue"
-                android:background="@drawable/circle_button"
-                android:text="Driver"
-                android:textColor="@android:color/white"
-                android:layout_marginEnd="20dp" />
-
-            <Button
+            <ImageButton
                 android:id="@+id/passengerButton"
-                android:layout_width="100dp"
-                android:layout_height="100dp"
-                android:background="@drawable/circle_button"
-                android:backgroundTint="@color/button_blue"
-                android:text="Passenger"
-                android:textColor="@android:color/white" />
-
-        </LinearLayout>
+                android:layout_width="200dp"
+                android:layout_height="200dp"
+                android:src="@drawable/req2"
+                android:background="@null"
+                android:scaleType="centerInside"
+                android:contentDescription="Request a Ride" />
+        </androidx.cardview.widget.CardView>
     </LinearLayout>
+
+    <!-- Driver button now floating in bottom-right corner -->
+    <Button
+        android:id="@+id/driverButton"
+        android:layout_width="160dp"
+        android:layout_height="50dp"
+        android:layout_gravity="bottom"
+        android:layout_margin="24dp"
+        android:backgroundTint="@color/gold"
+        android:elevation="6dp"
+        android:text="DRIVER"
+        android:textColor="@android:color/black"
+        android:textSize="16sp"
+        android:textStyle="bold" />
 </FrameLayout>
