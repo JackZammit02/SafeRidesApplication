@@ -39,20 +39,22 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:gravity="center"
             android:layout_marginTop="20dp">
 
             <TextView
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_weight="1"
                 android:text="Pickup:"
                 android:textSize="18sp"
+                android:gravity="end"
                 android:layout_marginEnd="10dp" />
 
             <Spinner
                 android:id="@+id/pickupSpinner"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1" />
         </LinearLayout>
 
         <!-- Drop-off Row -->
@@ -60,20 +62,22 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:gravity="center"
             android:layout_marginTop="10dp">
 
             <TextView
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_weight="1"
                 android:text="Drop-off:"
                 android:textSize="18sp"
+                android:gravity="end"
                 android:layout_marginEnd="10dp" />
 
             <Spinner
                 android:id="@+id/dropOffSpinner"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1" />
         </LinearLayout>
 
         <!-- Passenger Count Row -->
@@ -81,20 +85,22 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:gravity="center"
             android:layout_marginTop="10dp">
 
             <TextView
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_weight="1"
                 android:text="Passengers:"
                 android:textSize="18sp"
+                android:gravity="end"
                 android:layout_marginEnd="10dp" />
 
             <Spinner
                 android:id="@+id/passengerCountSpinner"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1" />
         </LinearLayout>
 
         <!-- Ride Queue RecyclerView -->
@@ -148,4 +154,20 @@
         android:paddingRight="20dp"
         android:paddingTop="10dp"
         android:paddingBottom="10dp" />
+    <!-- Cancel Ride Button anchored bottom-right -->
+    <Button
+        android:id="@+id/cancelRideButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Cancel Ride"
+        android:textSize="16sp"
+        android:backgroundTint="@color/red"
+        android:textColor="@android:color/white"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="24dp"
+        android:paddingLeft="20dp"
+        android:paddingRight="20dp"
+        android:paddingTop="10dp"
+        android:paddingBottom="10dp" />
+
 </FrameLayout>

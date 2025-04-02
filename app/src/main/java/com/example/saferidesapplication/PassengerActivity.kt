@@ -35,6 +35,9 @@ class PassengerActivity : ComponentActivity() {
         val dropOffSpinner: Spinner = findViewById(R.id.dropOffSpinner)
         val passengerCountSpinner: Spinner = findViewById(R.id.passengerCountSpinner)
         val requestRideButton: Button = findViewById(R.id.requestRideButton)
+        val cancelRideButton: Button = findViewById(R.id.cancelRideButton)
+        cancelRideButton.visibility = View.GONE
+
         val sharedPreferences = getSharedPreferences("SafeRidesPrefs", MODE_PRIVATE)
         val backButton = findViewById<Button>(R.id.backButton)
         backButton.setOnClickListener {
@@ -46,7 +49,6 @@ class PassengerActivity : ComponentActivity() {
         recyclerView = findViewById(R.id.rideQueueRecyclerView)
         recyclerView.layoutManager = LinearLayoutManager(this)
 
-        // Start polling the queue every few seconds
         startPollingQueue()
 
         val locations = listOf(
@@ -90,7 +92,7 @@ class PassengerActivity : ComponentActivity() {
                             Toast.LENGTH_LONG
                         ).show()
 
-                        // Immediately refresh queue
+                        cancelRideButton.visibility = View.VISIBLE
                         loadRideQueue()
                     } else {
                         Toast.makeText(
@@ -115,6 +117,11 @@ class PassengerActivity : ComponentActivity() {
             }
         }
 
+        cancelRideButton.setOnClickListener {
+            Toast.makeText(this@PassengerActivity, "Ride cancelled (backend coming soon)", Toast.LENGTH_SHORT).show()
+            cancelRideButton.visibility = View.GONE
+        }
+
         driverSwitchTextView = findViewById(R.id.driverSwitchTextView)
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
@@ -128,7 +135,7 @@ class PassengerActivity : ComponentActivity() {
         pollingJob = lifecycleScope.launch {
             while (isActive) {
                 loadRideQueue()
-                delay(5000) // 5 seconds
+                delay(5000)
             }
         }
     }
@@ -142,11 +149,10 @@ class PassengerActivity : ComponentActivity() {
 
                     if (rideList != null) {
                         val queuedRides: List<RideResponse> = rideList.filter { it.status == "queued" }
-                            .sortedBy { it.timestamp } // Ensure new requests go to the bottom
+                            .sortedBy { it.timestamp }
 
                         recyclerView.adapter = RideQueueAdapter(queuedRides, passengerId, isDriverView = false)
 
-                        // Ensure `queuedRides` is correctly typed before passing
                         updatePassengerRidePosition(queuedRides)
                     }
                 } else {
@@ -158,23 +164,17 @@ class PassengerActivity : ComponentActivity() {
         }
     }
 
-
     private fun updatePassengerRidePosition(queuedRides: List<RideResponse>) {
         val passengerRideStatusTextView: TextView = findViewById(R.id.passengerRideStatusTextView)
 
-        // Find the index of the passenger's ride in the sorted queue
         val passengerRideIndex = queuedRides.indexOfFirst { it.passengerId == passengerId }
 
-        // Update the text view with the ride position
         passengerRideStatusTextView.text = if (passengerRideIndex != -1) {
             "Your ride is in position: ${passengerRideIndex + 1}"
         } else {
             "Your ride is not in the queue"
         }
     }
-
-
-
 
     override fun onDestroy() {
         super.onDestroy()
@@ -188,6 +188,4 @@ class PassengerActivity : ComponentActivity() {
             driverSwitchTextView.visibility = View.GONE
         }
     }
-
-
 }
