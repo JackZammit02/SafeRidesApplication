@@ -4,7 +4,7 @@ import com.example.saferidesapplication.network.dto.*
 import retrofit2.Response
 import retrofit2.http.*
 
-const val BASE_URL = "http://138.236.243.17:8080"
+const val BASE_URL = "http://138.236.201.218:8080"
 
 interface ApiService {
 
@@ -46,7 +46,8 @@ interface ApiService {
     suspend fun updateRideStatus(
         @Path("rideId") rideId: String,
         @Query("status") status: String
-    ): Response<String>
+    ): Response<Unit>
+
 
 
 }

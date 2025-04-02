@@ -21,9 +21,19 @@ class RideQueueAdapter(
         private const val TYPE_FOOTER = 1
     }
 
-    private val visibleRides = if (rides.size > 5) rides.take(5) else rides
-    private val hasFooter = rides.size > 5
-    private val hiddenCount = rides.size - visibleRides.size
+    private val visibleRides: List<RideResponse> = buildList {
+        val assignedToDriver = rides.filter {
+            it.driverId == currentUserId && it.status in listOf("assigned", "arrived",  "in_progress")
+        }
+        val queued = rides.filter { it.status == "queued" }
+        val shownQueued = if (queued.size > 5) queued.take(5) else queued
+
+        addAll(assignedToDriver)
+        addAll(shownQueued)
+    }
+
+    private val hasFooter = rides.count { it.status == "queued" } > 5
+    private val hiddenCount = rides.count { it.status == "queued" } - 5
 
     inner class RideViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val pickupText: TextView = view.findViewById(R.id.pickupText)
@@ -70,14 +80,19 @@ class RideQueueAdapter(
             } else {
                 // Driver view
                 when {
-                    ride.driverId == currentUserId && ride.status in listOf("assigned", "arrived", "picked_up", "in_progress") -> {
+                    ride.driverId == currentUserId && ride.status in listOf("assigned", "arrived", "in_progress") -> {
                         holder.card.setCardBackgroundColor(Color.parseColor("#C8E6C9")) // green
                     }
-                    position == 0 && ride.status == "queued" -> {
-                        holder.card.setCardBackgroundColor(Color.parseColor("#FFECB3")) // light orange for the next ride
-                    }
                     else -> {
-                        holder.card.setCardBackgroundColor(Color.WHITE)
+                        // Check if this is the first visible queued ride
+                        val isFirstQueued = ride.status == "queued" &&
+                                visibleRides.indexOfFirst { it.status == "queued" } == position
+
+                        if (isFirstQueued) {
+                            holder.card.setCardBackgroundColor(Color.parseColor("#FFECB3")) // yellow for next ride
+                        } else {
+                            holder.card.setCardBackgroundColor(Color.WHITE)
+                        }
                     }
                 }
             }

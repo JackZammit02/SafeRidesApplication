@@ -27,7 +27,7 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="180dp"
             android:backgroundTint="@color/gold"
-            android:text="At pick up location"
+            android:text="Next Ride"
             android:textColor="@android:color/black"
             android:textSize="18sp"
             app:layout_constraintBottom_toTopOf="@+id/switchingDriversButton"

@@ -68,7 +68,7 @@ class DriverActivity : ComponentActivity() {
 
         actionButton.setOnClickListener {
             when (currentStage) {
-                0 -> assignNextRide(actionButton) // "Next Ride"
+                0 -> assignNextRide(actionButton)
                 1 -> updateRideStatus("arrived", actionButton, "Picked Up", 2)
                 2 -> updateRideStatus("in_progress", actionButton, "Complete Ride", 3)
                 3 -> updateRideStatus("completed", actionButton, "Next Ride", 0, reset = true)
@@ -92,10 +92,9 @@ class DriverActivity : ComponentActivity() {
                 if (response.isSuccessful && response.body() != null) {
                     val rides = response.body()!!
                         .filter {
-                            it.status == "queued" || (it.status == "assigned" && it.driverId == driverId)
+                            it.status == "queued" || (it.driverId == driverId && it.status in listOf("assigned", "arrived", "in_progress"))
                         }
                         .sortedBy { it.timestamp }
-
                     recyclerView.adapter = RideQueueAdapter(rides, driverId, isDriverView = true)
                 } else {
                     Toast.makeText(this@DriverActivity, "Could not load rides", Toast.LENGTH_SHORT).show()
@@ -148,21 +147,26 @@ class DriverActivity : ComponentActivity() {
                     currentStage = nextStage
                     when (status) {
                         "arrived" -> button.setBackgroundColor(Color.CYAN)
-                        "in_progress" -> button.setBackgroundColor(Color.LTGRAY)
+                        "picked_up" -> button.setBackgroundColor(Color.LTGRAY)
                         "completed" -> button.setBackgroundColor(Color.parseColor("#6200EE"))
                     }
                     if (reset) currentRideId = null
                     loadRideQueue()
                 } else {
-                    Toast.makeText(this@DriverActivity, "Failed to update status", Toast.LENGTH_SHORT).show()
+                    // NEW LOGGING
+                    val errorBody = response.errorBody()?.string()
+                    Toast.makeText(this@DriverActivity, "Failed to update status: ${response.code()}", Toast.LENGTH_SHORT).show()
+                    android.util.Log.e("API_ERROR", "Status update failed: $errorBody")
                 }
             } catch (e: Exception) {
                 Toast.makeText(this@DriverActivity, "Error: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
+                e.printStackTrace()
             } finally {
                 button.isEnabled = true
             }
         }
     }
+
 
     override fun onDestroy() {
         super.onDestroy()

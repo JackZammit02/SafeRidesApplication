@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.widget.Button
+import android.widget.ImageButton
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.lifecycle.lifecycleScope
@@ -23,7 +24,7 @@ class MainActivity : ComponentActivity() {
             startActivity(intent)
         }
 
-        val passengerButton: Button = findViewById(R.id.passengerButton)
+        val passengerButton: ImageButton = findViewById(R.id.passengerButton)
         passengerButton.setOnClickListener {
             registerPassenger()
         }
