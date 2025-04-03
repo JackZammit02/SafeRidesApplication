@@ -111,6 +111,7 @@
             android:layout_height="wrap_content"
             android:text="Back"
             android:textSize="16sp"
+            android:drawableLeft="@android:drawable/ic_media_previous"
             android:backgroundTint="@android:color/darker_gray"
             android:textColor="@android:color/white"
             android:layout_marginEnd="8dp" />
