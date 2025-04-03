@@ -22,6 +22,9 @@ interface ApiService {
         @Body request: ShiftUpdateRequest
     ): Response<String>
 
+    @POST("/verify-access-code")
+    fun verifyAccessCode(@Body code: String): Response<String>
+
     // --- RIDE ROUTES ---
 
     @POST("/rides/request")
@@ -38,9 +41,6 @@ interface ApiService {
         @Path("rideId") rideId: String,
         @Body request: CancelRideRequest
     ): Response<String>
-
-    @POST("/access-code")
-    suspend fun  verifyAccessCode(@Body code:AccessCode):Response<String>
 
     @POST("/rides/{rideId}/status")
     suspend fun updateRideStatus(

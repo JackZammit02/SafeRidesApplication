@@ -6,6 +6,7 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import com.example.saferidesapplication.network.ApiClient
 
 class AccessCodeActivity : ComponentActivity() {
 
@@ -18,17 +19,15 @@ class AccessCodeActivity : ComponentActivity() {
         val submitButton: Button = findViewById(R.id.submit_button)
         val exitButton: Button = findViewById(R.id.exit_button)
 
-
         exitButton.setOnClickListener {
             finish() //This closes this activity and returns to the previous one
         }
 
-
         submitButton.setOnClickListener {
             val accessCode = accessCodeInput.text.toString()
-
+            val response = ApiClient.apiService.verifyAccessCode(accessCode)
             // Validate the access code
-            if (accessCode == "123456") {
+            if (response.isSuccessful) {
                 // If the code is correct, navigate to DriverActivity
                 val intent = Intent(this, DriverActivity::class.java)
                 startActivity(intent)
