@@ -24,7 +24,7 @@ class MainActivity : ComponentActivity() {
             startActivity(intent)
         }
 
-        val passengerButton: ImageButton = findViewById(R.id.passengerButton)
+        val passengerButton: Button = findViewById(R.id.passengerButton)
         passengerButton.setOnClickListener {
             registerPassenger()
         }

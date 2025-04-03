@@ -4,7 +4,7 @@ import com.example.saferidesapplication.network.dto.*
 import retrofit2.Response
 import retrofit2.http.*
 
-const val BASE_URL = "http://138.236.224.123:8080"
+const val BASE_URL = "http://138.236.244.173:8080"
 
 interface ApiService {
 
