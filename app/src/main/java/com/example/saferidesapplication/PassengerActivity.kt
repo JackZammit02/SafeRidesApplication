@@ -6,6 +6,7 @@ import android.view.View
 import android.widget.*
 import androidx.activity.ComponentActivity
 import androidx.activity.enableEdgeToEdge
+import androidx.appcompat.widget.AppCompatImageButton
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
@@ -117,7 +118,7 @@ class PassengerActivity : ComponentActivity() {
     }
 
     private fun showRideRequestDialog() {
-        val dialogView = layoutInflater.inflate(R.layout.dialog_request_ride, null)
+        val dialogView = layoutInflater.inflate(R.layout.dialog_request_ride, findViewById(android.R.id.content), false)
 
         val pickupSpinner = dialogView.findViewById<Spinner>(R.id.pickupSpinner)
         val dropOffSpinner = dialogView.findViewById<Spinner>(R.id.dropOffSpinner)
@@ -139,6 +140,11 @@ class PassengerActivity : ComponentActivity() {
             .setView(dialogView)
             .setCancelable(true)
             .create()
+
+        val closeButton = dialogView.findViewById<AppCompatImageButton>(R.id.closeButton)
+        closeButton.setOnClickListener {
+            dialog.dismiss()
+        }
 
         confirmButton.setOnClickListener {
             val pickup = pickupSpinner.selectedItem.toString()
@@ -175,7 +181,8 @@ class PassengerActivity : ComponentActivity() {
         }
 
         dialog.show()
-        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)    }
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+    }
 
 
     override fun onDestroy() {
