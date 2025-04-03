@@ -20,12 +20,41 @@
         android:layout_height="match_parent"
         android:padding="20dp">
 
+        <TextView
+            android:id="@+id/pickupsTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="120dp"
+            android:text="Queue of Rides"
+            android:textColor="@android:color/black"
+            android:textSize="30sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.501"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
+        <!-- Queue (RecyclerView) with Border & Elevation -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/driverRideQueue"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:padding="8dp"
+            android:background="@drawable/queue_border"
+            android:elevation="8dp"
+            app:layout_constraintBottom_toTopOf="@id/hereButton"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/pickupsTitle" />
+
+        <!-- Next Ride Button (Moved Further Down) -->
         <Button
             android:id="@+id/hereButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="180dp"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="50dp"
             android:backgroundTint="@color/gold"
             android:text="Next Ride"
             android:drawableBottom="@drawable/baseline_arrow_forward_24"
@@ -35,33 +64,6 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.496"
             app:layout_constraintStart_toStartOf="parent" />
-
-        <TextView
-            android:id="@+id/pickupsTitle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="120dp"
-            android:text="Pick ups"
-            android:textColor="@android:color/black"
-            android:textSize="30sp"
-            android:textStyle="bold"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.501"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/driverRideQueue"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_marginTop="12dp"
-            android:padding="8dp"
-            app:layout_constraintBottom_toTopOf="@id/hereButton"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.0"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/pickupsTitle"
-            app:layout_constraintVertical_bias="1.0" />
 
         <Button
             android:id="@+id/switchingDriversButton"
@@ -95,3 +97,5 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </FrameLayout>
+
+
