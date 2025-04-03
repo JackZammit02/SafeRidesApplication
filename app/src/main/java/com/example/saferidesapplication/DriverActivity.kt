@@ -32,7 +32,6 @@ class DriverActivity : ComponentActivity() {
 
         recyclerView = findViewById(R.id.driverRideQueue)
         recyclerView.layoutManager = LinearLayoutManager(this)
-        recyclerView.setHasFixedSize(false)
 
         startPollingQueue()
 
