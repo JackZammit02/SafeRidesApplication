@@ -26,14 +26,14 @@ class RideQueueAdapter(
             it.driverId == currentUserId && it.status in listOf("assigned", "arrived",  "in_progress")
         }
         val queued = rides.filter { it.status == "queued" }
-        val shownQueued = if (queued.size > 5) queued.take(5) else queued
+        val shownQueued = if (queued.size > 8) queued.take(8) else queued
 
         addAll(assignedToDriver)
         addAll(shownQueued)
     }
 
-    private val hasFooter = rides.count { it.status == "queued" } > 5
-    private val hiddenCount = rides.count { it.status == "queued" } - 5
+    private val hasFooter = rides.count { it.status == "queued" } > 8
+    private val hiddenCount = rides.count { it.status == "queued" } - 8
 
     inner class RideViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val pickupText: TextView = view.findViewById(R.id.pickupText)

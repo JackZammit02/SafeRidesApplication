@@ -6,6 +6,7 @@ import android.view.View
 import android.widget.*
 import androidx.activity.ComponentActivity
 import androidx.activity.enableEdgeToEdge
+import androidx.appcompat.widget.AppCompatImageButton
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
@@ -31,9 +32,9 @@ class PassengerActivity : ComponentActivity() {
 
         title = "Passenger Page"
 
-        val pickupSpinner: Spinner = findViewById(R.id.pickupSpinner)
-        val dropOffSpinner: Spinner = findViewById(R.id.dropOffSpinner)
-        val passengerCountSpinner: Spinner = findViewById(R.id.passengerCountSpinner)
+        //val pickupSpinner: Spinner = findViewById(R.id.pickupSpinner)
+        //val dropOffSpinner: Spinner = findViewById(R.id.dropOffSpinner)
+        //val passengerCountSpinner: Spinner = findViewById(R.id.passengerCountSpinner)
         val requestRideButton: Button = findViewById(R.id.requestRideButton)
         val cancelRideButton: Button = findViewById(R.id.cancelRideButton)
         cancelRideButton.visibility = View.GONE
@@ -51,71 +52,11 @@ class PassengerActivity : ComponentActivity() {
 
         startPollingQueue()
 
-        val locations = listOf(
-            "Norelius Hall", "Three Flags Circle", "North Hall", "7th Street Houses",
-            "Rundstrom Hall", "Sohre Hall", "Arbor View Apartments", "Music Building South", "Nobel Hall",
-            "Chapel Circle", "International Center", "Lund Center", "College View Apartments", "Chapel View Townhomes"
-        )
-        val passengerCounts = listOf("1", "2", "3", "4")
-
-        val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, locations)
-        pickupSpinner.adapter = adapter
-        dropOffSpinner.adapter = adapter
-
-        val passengerAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, passengerCounts)
-        passengerCountSpinner.adapter = passengerAdapter
 
         requestRideButton.setOnClickListener {
-            val pickup = pickupSpinner.selectedItem.toString()
-            val dropOff = dropOffSpinner.selectedItem.toString()
-            val passengers = passengerCountSpinner.selectedItem.toString().toInt()
-
-            if (passengerId == "unknown") {
-                Toast.makeText(this, "Error: Passenger ID not found", Toast.LENGTH_LONG).show()
-                return@setOnClickListener
-            }
-
-            val rideRequest = RideRequest(
-                passengerId = passengerId,
-                pickupLocation = pickup,
-                dropoffLocation = dropOff,
-                passengerCount = passengers
-            )
-
-            lifecycleScope.launch {
-                try {
-                    val response = ApiClient.apiService.requestRide(rideRequest)
-                    if (response.isSuccessful && response.body() != null) {
-                        Toast.makeText(
-                            this@PassengerActivity,
-                            "Ride successfully requested!",
-                            Toast.LENGTH_LONG
-                        ).show()
-
-                        cancelRideButton.visibility = View.VISIBLE
-                        loadRideQueue()
-                    } else {
-                        Toast.makeText(
-                            this@PassengerActivity,
-                            "Request failed: ${response.code()}",
-                            Toast.LENGTH_LONG
-                        ).show()
-                    }
-                } catch (e: HttpException) {
-                    Toast.makeText(
-                        this@PassengerActivity,
-                        "HTTP error: ${e.message()}",
-                        Toast.LENGTH_LONG
-                    ).show()
-                } catch (e: Exception) {
-                    Toast.makeText(
-                        this@PassengerActivity,
-                        "Network error: ${e.localizedMessage}",
-                        Toast.LENGTH_LONG
-                    ).show()
-                }
-            }
+            showRideRequestDialog()
         }
+
 
         cancelRideButton.setOnClickListener {
             Toast.makeText(this@PassengerActivity, "Ride cancelled (backend coming soon)", Toast.LENGTH_SHORT).show()
@@ -175,6 +116,74 @@ class PassengerActivity : ComponentActivity() {
             "Your ride is not in the queue"
         }
     }
+
+    private fun showRideRequestDialog() {
+        val dialogView = layoutInflater.inflate(R.layout.dialog_request_ride, findViewById(android.R.id.content), false)
+
+        val pickupSpinner = dialogView.findViewById<Spinner>(R.id.pickupSpinner)
+        val dropOffSpinner = dialogView.findViewById<Spinner>(R.id.dropOffSpinner)
+        val passengerCountSpinner = dialogView.findViewById<Spinner>(R.id.passengerCountSpinner)
+        val confirmButton = dialogView.findViewById<Button>(R.id.requestRideButton)
+
+        val locations = listOf(
+            "Norelius Hall", "Three Flags Circle", "North Hall", "7th Street Houses",
+            "Rundstrom Hall", "Sohre Hall", "Arbor View Apartments", "Music Building South", "Nobel Hall",
+            "Chapel Circle", "International Center", "Lund Center", "College View Apartments", "Chapel View Townhomes"
+        )
+        val passengerCounts = listOf("1", "2", "3", "4")
+
+        pickupSpinner.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, locations)
+        dropOffSpinner.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, locations)
+        passengerCountSpinner.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, passengerCounts)
+
+        val dialog = android.app.AlertDialog.Builder(this)
+            .setView(dialogView)
+            .setCancelable(true)
+            .create()
+
+        val closeButton = dialogView.findViewById<AppCompatImageButton>(R.id.closeButton)
+        closeButton.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        confirmButton.setOnClickListener {
+            val pickup = pickupSpinner.selectedItem.toString()
+            val dropOff = dropOffSpinner.selectedItem.toString()
+            val passengers = passengerCountSpinner.selectedItem.toString().toInt()
+
+            if (passengerId == "unknown") {
+                Toast.makeText(this, "Error: Passenger ID not found", Toast.LENGTH_LONG).show()
+                return@setOnClickListener
+            }
+
+            val rideRequest = RideRequest(
+                passengerId = passengerId,
+                pickupLocation = pickup,
+                dropoffLocation = dropOff,
+                passengerCount = passengers
+            )
+
+            lifecycleScope.launch {
+                try {
+                    val response = ApiClient.apiService.requestRide(rideRequest)
+                    if (response.isSuccessful && response.body() != null) {
+                        Toast.makeText(this@PassengerActivity, "Ride successfully requested!", Toast.LENGTH_LONG).show()
+                        findViewById<Button>(R.id.cancelRideButton).visibility = View.VISIBLE
+                        loadRideQueue()
+                        dialog.dismiss()
+                    } else {
+                        Toast.makeText(this@PassengerActivity, "Request failed: ${response.code()}", Toast.LENGTH_LONG).show()
+                    }
+                } catch (e: Exception) {
+                    Toast.makeText(this@PassengerActivity, "Error: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+
+        dialog.show()
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+    }
+
 
     override fun onDestroy() {
         super.onDestroy()
