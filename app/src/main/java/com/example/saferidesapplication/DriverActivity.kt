@@ -60,11 +60,24 @@ class DriverActivity : ComponentActivity() {
         }
 
         logOffButton.setOnClickListener {
-            val intent = Intent(this, MainActivity::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            startActivity(intent)
-            finish()
+            val request = ShiftUpdateRequest(onShift = false)
+            lifecycleScope.launch {
+                try {
+                    val response = apiService.updateDriverShift(driverId, request)
+                    if (response.isSuccessful) {
+                        val intent = Intent(this@DriverActivity, MainActivity::class.java)
+                        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                        startActivity(intent)
+                        finish()
+                    } else {
+                        Toast.makeText(this@DriverActivity, "Failed to log off", Toast.LENGTH_SHORT).show()
+                    }
+                } catch (e: Exception) {
+                    Toast.makeText(this@DriverActivity, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
+            }
         }
+
 
         actionButton.setOnClickListener {
             when (currentStage) {
