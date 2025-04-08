@@ -6,7 +6,9 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.lifecycle.lifecycleScope
 import com.example.saferidesapplication.network.ApiClient
+import kotlinx.coroutines.launch
 
 class AccessCodeActivity : ComponentActivity() {
 
@@ -14,28 +16,52 @@ class AccessCodeActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_access_code)
 
-        // Initialize the views
         val accessCodeInput: EditText = findViewById(R.id.access_code_input)
         val submitButton: Button = findViewById(R.id.submit_button)
         val exitButton: Button = findViewById(R.id.exit_button)
 
         exitButton.setOnClickListener {
-            finish() //This closes this activity and returns to the previous one
+            finish()
         }
 
         submitButton.setOnClickListener {
-            val accessCode = accessCodeInput.text.toString()
+            val accessCode = accessCodeInput.text.toString().trim()
 
-            // Validate the access code
-            if (accessCode == "123456") {
-                // If the code is correct, navigate to DriverActivity
-                val intent = Intent(this, DriverActivity::class.java)
-                startActivity(intent)
-                finish() // Optionally finish this activity so the user can't navigate back to it
-            } else {
-                // If the code is incorrect, show a toast message
-                Toast.makeText(this, "Invalid Access Code. Please try again.", Toast.LENGTH_SHORT).show()
+            if (accessCode.isEmpty()) {
+                Toast.makeText(this, "Please enter an access code", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            // Send access code to backend
+            lifecycleScope.launch {
+                try {
+                    val response = ApiClient.apiService.verifyAccessCode(accessCode)
+                    when (response.code()) {
+                        201 -> {
+                            // Save driver ID in shared preferences
+                            getSharedPreferences("SafeRidesPrefs", MODE_PRIVATE)
+                                .edit()
+                                .putString("userId", accessCode)
+                                .apply()
+
+                            val intent = Intent(this@AccessCodeActivity, DriverActivity::class.java)
+                            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                            startActivity(intent)
+                            finish()
+                        }
+                        403 -> showToast("Too many drivers are logged in.")
+                        409 -> showToast("This driver is already on shift.")
+                        404 -> showToast("Access code not recognized.")
+                        else -> showToast("Error: ${response.code()}")
+                    }
+                } catch (e: Exception) {
+                    showToast("Login failed: ${e.localizedMessage}")
+                }
             }
         }
+    }
+
+    private fun showToast(message: String) {
+        Toast.makeText(this@AccessCodeActivity, message, Toast.LENGTH_LONG).show()
     }
 }
