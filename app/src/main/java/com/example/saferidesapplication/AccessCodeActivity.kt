@@ -8,6 +8,7 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.lifecycle.lifecycleScope
 import com.example.saferidesapplication.network.ApiClient
+import com.example.saferidesapplication.network.dto.AccessCode
 import kotlinx.coroutines.launch
 
 class AccessCodeActivity : ComponentActivity() {
@@ -35,7 +36,7 @@ class AccessCodeActivity : ComponentActivity() {
             // Send access code to backend
             lifecycleScope.launch {
                 try {
-                    val response = ApiClient.apiService.verifyAccessCode(accessCode)
+                    val response = ApiClient.apiService.verifyAccessCode(AccessCode(accessCode))
                     when (response.code()) {
                         201 -> {
                             // Save driver ID in shared preferences

@@ -19,7 +19,9 @@ import kotlinx.coroutines.launch
 class DriverActivity : ComponentActivity() {
 
     private lateinit var recyclerView: RecyclerView
-    private val driverId = "driver123" // Update if dynamic later
+    private val driverId: String by lazy {
+        getSharedPreferences("SafeRidesPrefs", MODE_PRIVATE).getString("userId", "") ?: ""
+    }
     private var pollingJob: Job? = null
     private var currentRideId: String? = null
     private var currentStage = 0

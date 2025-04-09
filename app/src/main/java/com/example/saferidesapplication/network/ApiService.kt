@@ -4,7 +4,7 @@ import com.example.saferidesapplication.network.dto.*
 import retrofit2.Response
 import retrofit2.http.*
 
-const val BASE_URL = "http://138.236.244.173:8080"
+const val BASE_URL = "http://138.236.200.105:8080"
 
 interface ApiService {
 
@@ -22,9 +22,8 @@ interface ApiService {
         @Body request: ShiftUpdateRequest
     ): Response<String>
 
-    @POST("/verify-access-code")
-    fun verifyAccessCode(@Body code: String): Response<String>
-
+    @POST("/users/verify-access-code")
+    suspend fun verifyAccessCode(@Body code: AccessCode): Response<String>
     // --- RIDE ROUTES ---
 
     @POST("/rides/request")
