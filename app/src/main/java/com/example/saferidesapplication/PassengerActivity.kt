@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.saferidesapplication.network.ApiClient
 import com.example.saferidesapplication.network.dto.RideRequest
 import com.example.saferidesapplication.network.dto.RideResponse
+import com.example.saferidesapplication.network.dto.CancelRideRequest
 import kotlinx.coroutines.*
 import retrofit2.HttpException
 
@@ -31,10 +32,6 @@ class PassengerActivity : ComponentActivity() {
         setContentView(R.layout.activity_passenger)
 
         title = "Passenger Page"
-
-        //val pickupSpinner: Spinner = findViewById(R.id.pickupSpinner)
-        //val dropOffSpinner: Spinner = findViewById(R.id.dropOffSpinner)
-        //val passengerCountSpinner: Spinner = findViewById(R.id.passengerCountSpinner)
         val requestRideButton: Button = findViewById(R.id.requestRideButton)
         val cancelRideButton: Button = findViewById(R.id.cancelRideButton)
         cancelRideButton.visibility = View.GONE
@@ -59,9 +56,43 @@ class PassengerActivity : ComponentActivity() {
 
 
         cancelRideButton.setOnClickListener {
-            Toast.makeText(this@PassengerActivity, "Ride cancelled (backend coming soon)", Toast.LENGTH_SHORT).show()
-            cancelRideButton.visibility = View.GONE
+            lifecycleScope.launch {
+                try {
+                    val response = ApiClient.apiService.getAllRides()
+                    if (response.isSuccessful) {
+                        val rides = response.body()
+                        val myRide = rides?.find {
+                            it.passengerId == passengerId &&
+                                    it.status in listOf("queued", "assigned", "arrived")
+                        }
+
+                        if (myRide == null) {
+                            Toast.makeText(this@PassengerActivity, "No cancellable ride found", Toast.LENGTH_SHORT).show()
+                            return@launch
+                        }
+
+                        val cancelRequest = com.example.saferidesapplication.network.dto.CancelRideRequest(
+                            userId = passengerId,
+                            isDriver = false
+                        )
+
+                        val cancelResponse = ApiClient.apiService.cancelRide(myRide.rideId, cancelRequest)
+
+                        if (cancelResponse.isSuccessful) {
+                            Toast.makeText(this@PassengerActivity, "Ride cancelled", Toast.LENGTH_SHORT).show()
+                            cancelRideButton.visibility = View.GONE
+                            loadRideQueue() // refresh the list
+                        } else {
+                            val error = cancelResponse.errorBody()?.string()
+                            Toast.makeText(this@PassengerActivity, "Cancel failed: $error", Toast.LENGTH_LONG).show()
+                        }
+                    }
+                } catch (e: Exception) {
+                    Toast.makeText(this@PassengerActivity, "Error: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
+                }
+            }
         }
+
 
         driverSwitchTextView = findViewById(R.id.driverSwitchTextView)
 
