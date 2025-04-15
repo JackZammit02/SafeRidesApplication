@@ -50,11 +50,12 @@
         </androidx.cardview.widget.CardView>
 
         <Button
-            android:layout_width="275dp"
-            android:layout_height="100dp"
+            android:layout_width="250dp"
+            android:layout_height="75dp"
             android:id="@+id/passengerButton"
+            android:background="@drawable/rounded_rectangle"
             android:backgroundTint="@color/gold"
-            android:text="Request a Ride/view queue"
+            android:text="Request Ride"
             android:textColor="@android:color/black"
             android:textSize="30sp"
             android:textStyle="bold"
@@ -70,6 +71,7 @@
         android:layout_height="50dp"
         android:layout_gravity="bottom"
         android:layout_margin="24dp"
+        android:background="@drawable/rounded_rectangle"
         android:backgroundTint="@color/gold"
         android:elevation="6dp"
         android:text="I am a DRIVER"
