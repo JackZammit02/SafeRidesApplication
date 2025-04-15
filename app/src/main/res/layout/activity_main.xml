@@ -27,8 +27,8 @@
             android:id="@+id/welcomeText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Welcome to the Safe Rides App at Gustavus Adolphus College."
-            android:textSize="30sp"
+            android:text="Safe Rides"
+            android:textSize="50sp"
             android:textAlignment="center"
             android:textStyle="bold"
             android:textColor="@android:color/white"
@@ -39,43 +39,68 @@
             android:shadowDy="10"
             android:shadowRadius="10"/>
 
-        <androidx.cardview.widget.CardView
+        <TextView
+            android:id="@+id/passengerRideStatusTextView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="30dp"
-            android:elevation="8dp"
-            card_view:cardCornerRadius="50dp"
-            card_view:cardBackgroundColor="@android:color/transparent">
+            android:text="Your ride is in position: -"
+            android:textColor="@android:color/white"
+            android:textSize="18sp"
+            android:layout_marginTop="16dp"
+            android:gravity="center"
+            android:textAlignment="center" />
 
-        </androidx.cardview.widget.CardView>
 
-        <Button
-            android:layout_width="250dp"
-            android:layout_height="75dp"
-            android:id="@+id/passengerButton"
-            android:background="@drawable/rounded_rectangle"
-            android:backgroundTint="@color/gold"
-            android:text="Request Ride"
-            android:textColor="@android:color/black"
-            android:textSize="30sp"
-            android:textStyle="bold"
-            android:layout_marginTop="450dp"/>
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rideQueueRecyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="600dp"
+            android:background="@android:color/transparent"
+            android:layout_marginTop="12dp"
+            android:layout_marginLeft="12dp"
+            android:layout_marginRight="12dp"
+            android:padding="8dp" />
 
 
     </LinearLayout>
 
-    <!-- Driver button now floating in bottom-right corner -->
-    <Button
-        android:id="@+id/driverButton"
-        android:layout_width="160dp"
-        android:layout_height="50dp"
-        android:layout_gravity="bottom"
-        android:layout_margin="24dp"
-        android:background="@drawable/rounded_rectangle"
-        android:backgroundTint="@color/gold"
-        android:elevation="6dp"
-        android:text="I am a DRIVER"
-        android:textColor="@android:color/black"
-        android:textSize="16sp"
-        android:textStyle="bold" />
+
+
+
+    <FrameLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="16dp">
+
+        <!-- Driver log in - bottom left -->
+        <Button
+            android:id="@+id/driverButton"
+            android:layout_width="160dp"
+            android:layout_height="60dp"
+            android:layout_gravity="bottom|start"
+            android:layout_margin="16dp"
+            android:background="@drawable/rounded_rectangle"
+            android:backgroundTint="@color/gold"
+            android:text="Driver log in"
+            android:textColor="@android:color/black"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <!-- Request Ride - bottom right -->
+        <Button
+            android:id="@+id/passengerButton"
+            android:layout_width="160dp"
+            android:layout_height="60dp"
+            android:layout_gravity="bottom|end"
+            android:layout_margin="16dp"
+            android:background="@drawable/rounded_rectangle"
+            android:backgroundTint="@color/gold"
+            android:text="Request Ride"
+            android:textColor="@android:color/black"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+    </FrameLayout>
+
 </FrameLayout>
