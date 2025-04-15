@@ -31,13 +31,18 @@
     <!-- Switching Drivers Text -->
         <TextView
             android:id="@+id/driverSwitchTextView"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Switching Drivers..."
+            android:text="Drivers are switching. Expect delays."
             android:visibility="gone"
             android:textSize="16sp"
-            android:textColor="@android:color/darker_gray"
-            android:textStyle="italic" />
+            android:textStyle="bold"
+            android:textColor="@android:color/white"
+            android:background="#D32F2F"
+            android:padding="10dp"
+            android:gravity="center"
+            android:elevation="6dp" />
+
 
         <!-- Queue Title -->
         <TextView
