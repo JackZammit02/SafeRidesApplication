@@ -15,9 +15,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.saferidesapplication.network.ApiClient
 import com.example.saferidesapplication.network.dto.RideRequest
 import com.example.saferidesapplication.network.dto.RideResponse
-import com.example.saferidesapplication.network.dto.CancelRideRequest
 import kotlinx.coroutines.*
-import retrofit2.HttpException
 
 class PassengerActivity : ComponentActivity() {
     private lateinit var driverSwitchTextView: TextView
@@ -106,6 +104,7 @@ class PassengerActivity : ComponentActivity() {
     private fun startPollingQueue() {
         pollingJob = lifecycleScope.launch {
             while (isActive) {
+                checkDriverSwitchState()
                 loadRideQueue()
                 delay(5000)
             }
@@ -135,6 +134,20 @@ class PassengerActivity : ComponentActivity() {
             }
         }
     }
+
+    private fun checkDriverSwitchState() {
+        lifecycleScope.launch {
+            try {
+                val response = ApiClient.apiService.getDriverSwitchingStatus()
+                val isSwitching = response.body()?.driverSwitchInProgress ?: false
+                updateDriverSwitchStatus(isSwitching)
+
+            } catch (e: Exception) {
+                // Optional: log or ignore
+            }
+        }
+    }
+
 
     private fun updatePassengerRidePosition(queuedRides: List<RideResponse>) {
         val passengerRideStatusTextView: TextView = findViewById(R.id.passengerRideStatusTextView)
@@ -221,7 +234,7 @@ class PassengerActivity : ComponentActivity() {
         pollingJob?.cancel()
     }
 
-    fun updateDriverSwitchStatus(isSwitching: Boolean) {
+    private fun updateDriverSwitchStatus(isSwitching: Boolean) {
         if (isSwitching) {
             driverSwitchTextView.visibility = View.VISIBLE
         } else {

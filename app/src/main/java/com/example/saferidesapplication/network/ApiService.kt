@@ -47,6 +47,10 @@ interface ApiService {
         @Query("status") status: String
     ): Response<Unit>
 
+    @POST("/rides/driver-switch")
+    suspend fun setDriverSwitching(@Body request: DriverSwitchRequest): Response<String>
 
+    @GET("/rides/driver-switch/status")
+    suspend fun getDriverSwitchingStatus(): Response<DriverSwitchStatusResponse>
 
 }

@@ -9,6 +9,7 @@ import androidx.activity.ComponentActivity
 import androidx.lifecycle.lifecycleScope
 import com.example.saferidesapplication.network.ApiClient
 import com.example.saferidesapplication.network.dto.AccessCode
+import com.example.saferidesapplication.network.dto.DriverSwitchRequest
 import kotlinx.coroutines.launch
 
 class AccessCodeActivity : ComponentActivity() {
@@ -45,6 +46,15 @@ class AccessCodeActivity : ComponentActivity() {
                                 .putString("userId", accessCode)
                                 .apply()
 
+                            // Clear "driver switching" flag on backend
+                            lifecycleScope.launch {
+                                try {
+                                    ApiClient.apiService.setDriverSwitching(DriverSwitchRequest(switching = false))                                } catch (e: Exception) {
+                                    // optional: log it, fail silently
+                                }
+                            }
+
+                            // Navigate to DriverActivity
                             val intent = Intent(this@AccessCodeActivity, DriverActivity::class.java)
                             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                             startActivity(intent)
