@@ -1,173 +1,35 @@
 package com.example.saferidesapplication
 
-import android.annotation.SuppressLint
+import android.content.Intent
 import android.os.Bundle
-import android.view.View
 import android.widget.*
 import androidx.activity.ComponentActivity
-import androidx.activity.enableEdgeToEdge
-import androidx.appcompat.widget.AppCompatImageButton
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.example.saferidesapplication.network.ApiClient
 import com.example.saferidesapplication.network.dto.RideRequest
-import com.example.saferidesapplication.network.dto.RideResponse
-import kotlinx.coroutines.*
+import kotlinx.coroutines.launch
 
 class PassengerActivity : ComponentActivity() {
-    private lateinit var driverSwitchTextView: TextView
-    private var pollingJob: Job? = null
-    private lateinit var passengerId: String
-    private lateinit var recyclerView: RecyclerView
 
-    @SuppressLint("MissingInflatedId")
+    private lateinit var pickupSpinner: Spinner
+    private lateinit var dropOffSpinner: Spinner
+    private lateinit var passengerCountSpinner: Spinner
+    private lateinit var confirmButton: Button
+    private lateinit var passengerId: String
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         setContentView(R.layout.activity_passenger)
 
-        title = "Passenger Page"
-        val requestRideButton: Button = findViewById(R.id.requestRideButton)
-        val cancelRideButton: Button = findViewById(R.id.cancelRideButton)
-        cancelRideButton.visibility = View.GONE
-
+        // Get passenger ID from shared preferences
         val sharedPreferences = getSharedPreferences("SafeRidesPrefs", MODE_PRIVATE)
-        val backButton = findViewById<Button>(R.id.backButton)
-        backButton.setOnClickListener {
-            finish()
-        }
-
         passengerId = sharedPreferences.getString("userId", null) ?: "unknown"
 
-        recyclerView = findViewById(R.id.rideQueueRecyclerView)
-        recyclerView.layoutManager = LinearLayoutManager(this)
-
-        startPollingQueue()
-
-
-        requestRideButton.setOnClickListener {
-            showRideRequestDialog()
-        }
-
-
-        cancelRideButton.setOnClickListener {
-            lifecycleScope.launch {
-                try {
-                    val response = ApiClient.apiService.getAllRides()
-                    if (response.isSuccessful) {
-                        val rides = response.body()
-                        val myRide = rides?.find {
-                            it.passengerId == passengerId &&
-                                    it.status in listOf("queued", "assigned", "arrived")
-                        }
-
-                        if (myRide == null) {
-                            Toast.makeText(this@PassengerActivity, "No cancellable ride found", Toast.LENGTH_SHORT).show()
-                            return@launch
-                        }
-
-                        val cancelRequest = com.example.saferidesapplication.network.dto.CancelRideRequest(
-                            userId = passengerId,
-                            isDriver = false
-                        )
-
-                        val cancelResponse = ApiClient.apiService.cancelRide(myRide.rideId, cancelRequest)
-
-                        if (cancelResponse.isSuccessful) {
-                            Toast.makeText(this@PassengerActivity, "Ride cancelled", Toast.LENGTH_SHORT).show()
-                            cancelRideButton.visibility = View.GONE
-                            loadRideQueue() // refresh the list
-                        } else {
-                            val error = cancelResponse.errorBody()?.string()
-                            Toast.makeText(this@PassengerActivity, "Cancel failed: $error", Toast.LENGTH_LONG).show()
-                        }
-                    }
-                } catch (e: Exception) {
-                    Toast.makeText(this@PassengerActivity, "Error: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
-                }
-            }
-        }
-
-
-        driverSwitchTextView = findViewById(R.id.driverSwitchTextView)
-
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
-        }
-    }
-
-    private fun startPollingQueue() {
-        pollingJob = lifecycleScope.launch {
-            while (isActive) {
-                checkDriverSwitchState()
-                loadRideQueue()
-                delay(5000)
-            }
-        }
-    }
-
-    private fun loadRideQueue() {
-        lifecycleScope.launch {
-            try {
-                val response = ApiClient.apiService.getAllRides()
-                if (response.isSuccessful) {
-                    val rideList = response.body()
-
-                    if (rideList != null) {
-                        val queuedRides: List<RideResponse> = rideList.filter { it.status == "queued" }
-                            .sortedBy { it.timestamp }
-
-                        recyclerView.adapter = RideQueueAdapter(queuedRides, passengerId, isDriverView = false)
-
-                        updatePassengerRidePosition(queuedRides)
-                    }
-                } else {
-                    Toast.makeText(this@PassengerActivity, "Could not load queue", Toast.LENGTH_SHORT).show()
-                }
-            } catch (e: Exception) {
-                Toast.makeText(this@PassengerActivity, "Error: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
-
-    private fun checkDriverSwitchState() {
-        lifecycleScope.launch {
-            try {
-                val response = ApiClient.apiService.getDriverSwitchingStatus()
-                val isSwitching = response.body()?.driverSwitchInProgress ?: false
-                updateDriverSwitchStatus(isSwitching)
-
-            } catch (e: Exception) {
-                // Optional: log or ignore
-            }
-        }
-    }
-
-
-    private fun updatePassengerRidePosition(queuedRides: List<RideResponse>) {
-        val passengerRideStatusTextView: TextView = findViewById(R.id.passengerRideStatusTextView)
-
-        val passengerRideIndex = queuedRides.indexOfFirst { it.passengerId == passengerId }
-
-        passengerRideStatusTextView.text = if (passengerRideIndex != -1) {
-            "Your ride is in position: ${passengerRideIndex + 1}"
-        } else {
-            "Your ride is not in the queue"
-        }
-    }
-
-    private fun showRideRequestDialog() {
-        val dialogView = layoutInflater.inflate(R.layout.dialog_request_ride, findViewById(android.R.id.content), false)
-
-        val pickupSpinner = dialogView.findViewById<Spinner>(R.id.pickupSpinner)
-        val dropOffSpinner = dialogView.findViewById<Spinner>(R.id.dropOffSpinner)
-        val passengerCountSpinner = dialogView.findViewById<Spinner>(R.id.passengerCountSpinner)
-        val confirmButton = dialogView.findViewById<Button>(R.id.requestRideButton)
+        // Initialize UI elements
+        pickupSpinner = findViewById(R.id.pickupSpinner)
+        dropOffSpinner = findViewById(R.id.dropOffSpinner)
+        passengerCountSpinner = findViewById(R.id.passengerCountSpinner)
+        confirmButton = findViewById(R.id.confirmRideButton)
 
         val locations = listOf(
             "Norelius Hall", "Three Flags Circle", "North Hall", "7th Street Houses",
@@ -180,41 +42,33 @@ class PassengerActivity : ComponentActivity() {
         dropOffSpinner.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, locations)
         passengerCountSpinner.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, passengerCounts)
 
-        val dialog = android.app.AlertDialog.Builder(this)
-            .setView(dialogView)
-            .setCancelable(true)
-            .create()
-
-        val closeButton = dialogView.findViewById<AppCompatImageButton>(R.id.closeButton)
-        closeButton.setOnClickListener {
-            dialog.dismiss()
-        }
-
         confirmButton.setOnClickListener {
             val pickup = pickupSpinner.selectedItem.toString()
-            val dropOff = dropOffSpinner.selectedItem.toString()
-            val passengers = passengerCountSpinner.selectedItem.toString().toInt()
+            val dropoff = dropOffSpinner.selectedItem.toString()
+            val passengerCount = passengerCountSpinner.selectedItem.toString().toInt()
 
-            if (passengerId == "unknown") {
-                Toast.makeText(this, "Error: Passenger ID not found", Toast.LENGTH_LONG).show()
+            if (pickup == dropoff) {
+                Toast.makeText(this, "Pickup and drop-off cannot be the same", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
             val rideRequest = RideRequest(
                 passengerId = passengerId,
                 pickupLocation = pickup,
-                dropoffLocation = dropOff,
-                passengerCount = passengers
+                dropoffLocation = dropoff,
+                passengerCount = passengerCount
             )
 
             lifecycleScope.launch {
                 try {
                     val response = ApiClient.apiService.requestRide(rideRequest)
-                    if (response.isSuccessful && response.body() != null) {
+                    if (response.isSuccessful) {
                         Toast.makeText(this@PassengerActivity, "Ride successfully requested!", Toast.LENGTH_LONG).show()
-                        findViewById<Button>(R.id.cancelRideButton).visibility = View.VISIBLE
-                        loadRideQueue()
-                        dialog.dismiss()
+                        // Go back to MainActivity
+                        val intent = Intent(this@PassengerActivity, MainActivity::class.java)
+                        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                        startActivity(intent)
+                        finish()
                     } else {
                         Toast.makeText(this@PassengerActivity, "Request failed: ${response.code()}", Toast.LENGTH_LONG).show()
                     }
@@ -223,22 +77,9 @@ class PassengerActivity : ComponentActivity() {
                 }
             }
         }
-
-        dialog.show()
-        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
-    }
-
-
-    override fun onDestroy() {
-        super.onDestroy()
-        pollingJob?.cancel()
-    }
-
-    private fun updateDriverSwitchStatus(isSwitching: Boolean) {
-        if (isSwitching) {
-            driverSwitchTextView.visibility = View.VISIBLE
-        } else {
-            driverSwitchTextView.visibility = View.GONE
+        findViewById<Button>(R.id.backButton).setOnClickListener {
+            finish()
         }
+
     }
 }

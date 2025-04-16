@@ -13,7 +13,8 @@ class RideQueueAdapter(
 
     private val rides: List<RideResponse>,
     private val currentUserId: String,
-    private val isDriverView: Boolean
+    private val isDriverView: Boolean,
+    private val driverColor: Int? = null
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     companion object {
@@ -70,6 +71,7 @@ class RideQueueAdapter(
             holder.pickupText.text = "Pickup: ${ride.pickupLocation}"
             holder.dropoffText.text = "Dropoff: ${ride.dropoffLocation}"
             holder.passengerCountText.text = "Passengers: ${ride.passengerCount}"
+
             if (!isDriverView) {
                 // Passenger view: highlight their own ride
                 if (ride.passengerId == currentUserId) {
@@ -78,21 +80,25 @@ class RideQueueAdapter(
                     holder.card.setCardBackgroundColor(Color.WHITE)
                 }
             } else {
-                // Driver view
                 when {
+                    // Assigned or in-progress rides handled by this driver
                     ride.driverId == currentUserId && ride.status in listOf("assigned", "arrived", "in_progress") -> {
-                        holder.card.setCardBackgroundColor(Color.parseColor("#C8E6C9")) // green
+                        holder.card.setCardBackgroundColor(driverColor ?: Color.parseColor("#C8E6C9")) // driver-specific color
                     }
-                    else -> {
-                        // Check if this is the first visible queued ride
-                        val isFirstQueued = ride.status == "queued" &&
-                                visibleRides.indexOfFirst { it.status == "queued" } == position
 
-                        if (isFirstQueued) {
-                            holder.card.setCardBackgroundColor(Color.parseColor("#FFECB3")) // yellow for next ride
-                        } else {
-                            holder.card.setCardBackgroundColor(Color.WHITE)
-                        }
+                    // Assigned rides handled by another driver
+                    ride.driverId != null && ride.status in listOf("assigned", "arrived", "in_progress") -> {
+                        holder.card.setCardBackgroundColor(Color.parseColor("#E0E0E0")) // gray for other driver's rides
+                    }
+
+                    // First queued ride (available to assign)
+                    ride.status == "queued" &&
+                            visibleRides.indexOfFirst { it.status == "queued" } == position -> {
+                        holder.card.setCardBackgroundColor(Color.parseColor("#FFECB3")) // yellow
+                    }
+
+                    else -> {
+                        holder.card.setCardBackgroundColor(Color.WHITE)
                     }
                 }
             }
@@ -100,6 +106,7 @@ class RideQueueAdapter(
             holder.footerText.text = "+$hiddenCount more rides..."
         }
     }
+
 
     override fun getItemCount(): Int {
         return visibleRides.size + if (hasFooter) 1 else 0

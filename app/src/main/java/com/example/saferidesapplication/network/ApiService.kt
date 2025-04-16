@@ -41,6 +41,9 @@ interface ApiService {
         @Body request: CancelRideRequest
     ): Response<String>
 
+    @GET("users/drivers")
+    suspend fun getAllDrivers(): Response<List<UserResponse>>
+
     @POST("/rides/{rideId}/status")
     suspend fun updateRideStatus(
         @Path("rideId") rideId: String,

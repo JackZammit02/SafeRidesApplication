@@ -15,30 +15,31 @@
         android:alpha="0.6"
         android:contentDescription="Campus background" />
 
-    <!-- Main content vertically centered -->
+    <!-- Main Content -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
-        android:gravity="center_horizontal"
-        android:padding="24dp">
+        android:padding="24dp"
+        android:gravity="top|center_horizontal">
 
+        <!-- Title -->
         <TextView
             android:id="@+id/welcomeText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Safe Rides"
             android:textSize="50sp"
-            android:textAlignment="center"
             android:textStyle="bold"
             android:textColor="@android:color/white"
-            android:gravity="center"
             android:layout_marginTop="20dp"
+            android:gravity="center"
             android:shadowColor="#80000000"
             android:shadowDx="10"
             android:shadowDy="10"
-            android:shadowRadius="10"/>
+            android:shadowRadius="10" />
 
+        <!-- Ride Position Status -->
         <TextView
             android:id="@+id/passengerRideStatusTextView"
             android:layout_width="wrap_content"
@@ -50,57 +51,74 @@
             android:gravity="center"
             android:textAlignment="center" />
 
+        <TextView
+            android:id="@+id/driverAvailabilityStatusTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Driver status loading..."
+            android:textColor="@android:color/white"
+            android:textSize="16sp"
+            android:layout_marginTop="8dp"
+            android:gravity="center"
+            android:textAlignment="center" />
 
+
+        <!-- Ride Queue -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rideQueueRecyclerView"
             android:layout_width="match_parent"
-            android:layout_height="600dp"
+            android:layout_height="0dp"
+            android:layout_weight="1"
             android:background="@android:color/transparent"
             android:layout_marginTop="12dp"
-            android:layout_marginLeft="12dp"
-            android:layout_marginRight="12dp"
             android:padding="8dp" />
 
+        <!-- Bottom Buttons -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:layout_marginTop="16dp">
 
+            <Button
+                android:id="@+id/driverButton"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="60dp"
+                android:layout_marginEnd="8dp"
+                android:background="@drawable/rounded_rectangle"
+                android:backgroundTint="@color/gold"
+                android:text="Driver Log In"
+                android:textColor="@android:color/black"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <Button
+                android:id="@+id/passengerButton"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="60dp"
+                android:layout_marginEnd="8dp"
+                android:background="@drawable/rounded_rectangle"
+                android:backgroundTint="@color/gold"
+                android:text="Request Ride"
+                android:textColor="@android:color/black"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <Button
+                android:id="@+id/cancelRideButton"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="60dp"
+                android:background="@drawable/rounded_rectangle"
+                android:backgroundTint="@color/red"
+                android:text="Cancel Ride"
+                android:textColor="@android:color/white"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:visibility="gone" />
+        </LinearLayout>
     </LinearLayout>
-
-
-
-
-    <FrameLayout
-        xmlns:android="http://schemas.android.com/apk/res/android"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:padding="16dp">
-
-        <!-- Driver log in - bottom left -->
-        <Button
-            android:id="@+id/driverButton"
-            android:layout_width="160dp"
-            android:layout_height="60dp"
-            android:layout_gravity="bottom|start"
-            android:layout_margin="16dp"
-            android:background="@drawable/rounded_rectangle"
-            android:backgroundTint="@color/gold"
-            android:text="Driver log in"
-            android:textColor="@android:color/black"
-            android:textSize="18sp"
-            android:textStyle="bold" />
-
-        <!-- Request Ride - bottom right -->
-        <Button
-            android:id="@+id/passengerButton"
-            android:layout_width="160dp"
-            android:layout_height="60dp"
-            android:layout_gravity="bottom|end"
-            android:layout_margin="16dp"
-            android:background="@drawable/rounded_rectangle"
-            android:backgroundTint="@color/gold"
-            android:text="Request Ride"
-            android:textColor="@android:color/black"
-            android:textSize="18sp"
-            android:textStyle="bold" />
-
-    </FrameLayout>
-
 </FrameLayout>

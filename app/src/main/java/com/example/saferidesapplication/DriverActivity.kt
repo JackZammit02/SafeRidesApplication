@@ -3,8 +3,9 @@ package com.example.saferidesapplication
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
-import android.util.Log
+
 import android.widget.Button
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.lifecycle.lifecycleScope
@@ -12,7 +13,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.saferidesapplication.network.ApiClient.apiService
 import com.example.saferidesapplication.network.dto.ShiftUpdateRequest
-import com.example.saferidesapplication.network.dto.DriverSwitchRequest
+
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -24,10 +25,17 @@ class DriverActivity : ComponentActivity() {
     private val driverId: String by lazy {
         getSharedPreferences("SafeRidesPrefs", MODE_PRIVATE).getString("userId", "") ?: ""
     }
-    private lateinit var switchOverlay: Button // or TextView if you used that
     private var pollingJob: Job? = null
     private var currentRideId: String? = null
     private var currentStage = 0
+    private val driverColor: Int by lazy {
+        when (driverId) {
+            "123456" -> android.graphics.Color.parseColor("#4CAF50") // Green
+            "654321" -> android.graphics.Color.parseColor("#2196F3") // Blue
+            else -> android.graphics.Color.LTGRAY
+        }
+    }
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,44 +46,14 @@ class DriverActivity : ComponentActivity() {
         recyclerView = findViewById(R.id.driverRideQueue)
         recyclerView.layoutManager = LinearLayoutManager(this)
 
-        switchOverlay = findViewById(R.id.switchingOverlay)
-        checkDriverSwitchState()
+
 
 
         startPollingQueue()
 
-        val switchDriversButton: Button = findViewById(R.id.switchingDriversButton)
+
         val logOffButton: Button = findViewById(R.id.logOffButton)
         val actionButton: Button = findViewById(R.id.hereButton)
-
-
-
-        switchDriversButton.setOnClickListener {
-            val shiftRequest = ShiftUpdateRequest(onShift = false)
-            val switchRequest = DriverSwitchRequest(switching = true)
-
-            lifecycleScope.launch {
-                try {
-                    // Set the driver switch flag
-                    apiService.setDriverSwitching(switchRequest)
-
-                    // Mark driver off shift
-                    val response = apiService.updateDriverShift(driverId, shiftRequest)
-
-                    if (response.isSuccessful) {
-                        Toast.makeText(this@DriverActivity, "Driver switched", Toast.LENGTH_SHORT).show()
-                        val intent = Intent(this@DriverActivity, MainActivity::class.java)
-                        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                        startActivity(intent)
-                        finish()
-                    } else {
-                        Toast.makeText(this@DriverActivity, "Failed to switch driver", Toast.LENGTH_SHORT).show()
-                    }
-                } catch (e: Exception) {
-                    Toast.makeText(this@DriverActivity, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
-                }
-            }
-        }
 
 
 
@@ -112,21 +90,8 @@ class DriverActivity : ComponentActivity() {
     private fun startPollingQueue() {
         pollingJob = lifecycleScope.launch {
             while (isActive) {
-                checkDriverSwitchState()
                 loadRideQueue()
                 delay(5000)
-            }
-        }
-    }
-
-    private fun checkDriverSwitchState() {
-        lifecycleScope.launch {
-            try {
-                val response = apiService.getDriverSwitchingStatus()
-                val switching =  response.body()?.driverSwitchInProgress ?: false
-                switchOverlay.visibility = if (switching) Button.VISIBLE else Button.GONE
-            } catch (e: Exception) {
-                Log.e("SwitchState", "Failed to fetch switch state", e)
             }
         }
     }
@@ -141,7 +106,13 @@ class DriverActivity : ComponentActivity() {
                             it.status == "queued" || (it.driverId == driverId && it.status in listOf("assigned", "arrived", "in_progress"))
                         }
                         .sortedBy { it.timestamp }
-                    recyclerView.adapter = RideQueueAdapter(rides, driverId, isDriverView = true)
+
+                    recyclerView.adapter = RideQueueAdapter(rides, driverId, isDriverView = true, driverColor = driverColor)
+
+
+                    // 👇 NEW LOGIC HERE
+                    val hereButton = findViewById<Button>(R.id.hereButton)
+                    hereButton.visibility = if (rides.isNotEmpty()) Button.VISIBLE else Button.GONE
                 } else {
                     Toast.makeText(this@DriverActivity, "Could not load rides", Toast.LENGTH_SHORT).show()
                 }
@@ -150,6 +121,7 @@ class DriverActivity : ComponentActivity() {
             }
         }
     }
+
 
     private fun assignNextRide(button: Button) {
         button.isEnabled = false
