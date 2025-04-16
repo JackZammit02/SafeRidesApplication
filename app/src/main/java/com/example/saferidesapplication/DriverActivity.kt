@@ -3,6 +3,7 @@ package com.example.saferidesapplication
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
+import android.util.Log
 
 import android.widget.Button
 import android.widget.TextView
@@ -28,13 +29,6 @@ class DriverActivity : ComponentActivity() {
     private var pollingJob: Job? = null
     private var currentRideId: String? = null
     private var currentStage = 0
-    private val driverColor: Int by lazy {
-        when (driverId) {
-            "123456" -> android.graphics.Color.parseColor("#4CAF50") // Green
-            "654321" -> android.graphics.Color.parseColor("#2196F3") // Blue
-            else -> android.graphics.Color.LTGRAY
-        }
-    }
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -107,8 +101,7 @@ class DriverActivity : ComponentActivity() {
                         }
                         .sortedBy { it.timestamp }
 
-                    recyclerView.adapter = RideQueueAdapter(rides, driverId, isDriverView = true, driverColor = driverColor)
-
+                    recyclerView.adapter = RideQueueAdapter(rides, driverId, isDriverView = true)
 
                     // 👇 NEW LOGIC HERE
                     val hereButton = findViewById<Button>(R.id.hereButton)
@@ -184,6 +177,8 @@ class DriverActivity : ComponentActivity() {
             }
         }
     }
+
+
 
 
     override fun onDestroy() {

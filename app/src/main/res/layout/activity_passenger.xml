@@ -15,36 +15,39 @@
         android:contentDescription="Campus background" />
 
     <!-- Content -->
+
+    <!-- Bottom Button Bar -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:gravity="top|center_horizontal"
         android:orientation="vertical"
-        android:padding="24dp"
-        android:gravity="top|center_horizontal">
+        android:padding="24dp">
 
         <!-- Title -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Request a Ride"
-            android:textColor="@android:color/white"
-            android:textSize="40sp"
-            android:textStyle="bold"
             android:layout_marginTop="20dp"
             android:gravity="center"
             android:shadowColor="#80000000"
             android:shadowDx="10"
             android:shadowDy="10"
-            android:shadowRadius="10" />
+            android:shadowRadius="10"
+            android:text="Request a Ride"
+            android:textColor="@android:color/white"
+            android:textSize="40sp"
+            android:textStyle="bold" />
 
         <!-- Pickup -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
             android:text="Pickup Location"
             android:textColor="@android:color/white"
-            android:textSize="16sp"
-            android:layout_marginTop="24dp" />
+            android:textSize="16sp" />
+
         <Spinner
             android:id="@+id/pickupSpinner"
             android:layout_width="match_parent"
@@ -58,6 +61,7 @@
             android:text="Drop-off Location"
             android:textColor="@android:color/white"
             android:textSize="16sp" />
+
         <Spinner
             android:id="@+id/dropOffSpinner"
             android:layout_width="match_parent"
@@ -71,6 +75,7 @@
             android:text="Number of Passengers"
             android:textColor="@android:color/white"
             android:textSize="16sp" />
+
         <Spinner
             android:id="@+id/passengerCountSpinner"
             android:layout_width="match_parent"
@@ -78,7 +83,6 @@
             android:layout_marginBottom="80dp" />
     </LinearLayout>
 
-    <!-- Bottom Button Bar -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
