@@ -71,13 +71,13 @@
                 android:textStyle="bold" />
 
             <Button
-                android:id="@+id/logOffButton"
+                android:id="@+id/endShiftButton"
                 android:layout_width="0dp"
                 android:layout_weight="1"
                 android:layout_height="60dp"
                 android:background="@drawable/rounded_red_button"
                 android:backgroundTint="@color/red"
-                android:text="Log Out"
+                android:text="End Shift"
                 android:textColor="@android:color/white"
                 android:textSize="16sp"
                 android:textStyle="bold" />

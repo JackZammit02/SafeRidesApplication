@@ -142,15 +142,29 @@ class MainActivity : ComponentActivity() {
                         val driverButton = findViewById<Button>(R.id.driverButton)
                         val driverStatusTextView = findViewById<TextView>(R.id.driverAvailabilityStatusTextView)
 
+                        val switchStatusResponse = ApiClient.apiService.getDriverSwitchingStatus()
+                        val switchingDrivers = switchStatusResponse.body()?.driverSwitchInProgress == true
+
+
                         if (activeDrivers == 0) {
+                            driverStatusTextView.text = if (switchingDrivers) {
+                                "Drivers are switching — please expect delays"
+                            } else {
+                                "No drivers currently available"
+                            }
                             requestButton.isEnabled = false
                             requestButton.alpha = 0.5f
-                            driverStatusTextView.text = "No drivers currently available"
                         } else {
-                            driverStatusTextView.text = "Drivers available"
+                            driverStatusTextView.text = when {
+                                switchingDrivers -> "2 drivers active — switching in progress"
+                                activeDrivers == 1 -> "1 driver active"
+                                else -> "2 drivers active"
+                            }
+
                             requestButton.isEnabled = !hasActiveRide
                             requestButton.alpha = if (hasActiveRide) 0.5f else 1.0f
                         }
+
 
                         cancelButton.visibility = if (hasActiveRide) Button.VISIBLE else Button.GONE
 

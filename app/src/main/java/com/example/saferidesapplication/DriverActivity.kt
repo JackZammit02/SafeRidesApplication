@@ -3,10 +3,8 @@ package com.example.saferidesapplication
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
-import android.util.Log
 
 import android.widget.Button
-import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.lifecycle.lifecycleScope
@@ -46,29 +44,30 @@ class DriverActivity : ComponentActivity() {
         startPollingQueue()
 
 
-        val logOffButton: Button = findViewById(R.id.logOffButton)
+        val endShiftButton: Button = findViewById(R.id.endShiftButton)
         val actionButton: Button = findViewById(R.id.hereButton)
 
 
 
-        logOffButton.setOnClickListener {
-            val request = ShiftUpdateRequest(onShift = false)
-            lifecycleScope.launch {
-                try {
-                    val response = apiService.updateDriverShift(driverId, request)
-                    if (response.isSuccessful) {
-                        val intent = Intent(this@DriverActivity, MainActivity::class.java)
-                        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                        startActivity(intent)
-                        finish()
-                    } else {
-                        Toast.makeText(this@DriverActivity, "Failed to log off", Toast.LENGTH_SHORT).show()
-                    }
-                } catch (e: Exception) {
-                    Toast.makeText(this@DriverActivity, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
-                }
+        endShiftButton.setOnClickListener {
+            val dialogView = layoutInflater.inflate(R.layout.dialog_end_shift, null)
+            val alertDialog = android.app.AlertDialog.Builder(this)
+                .setView(dialogView)
+                .create()
+
+            dialogView.findViewById<Button>(R.id.switchButton).setOnClickListener {
+                alertDialog.dismiss()
+                handleEndShift(switching = true)
             }
+
+            dialogView.findViewById<Button>(R.id.logOffButton).setOnClickListener {
+                alertDialog.dismiss()
+                handleEndShift(switching = false)
+            }
+
+            alertDialog.show()
         }
+
 
 
         actionButton.setOnClickListener {
@@ -103,7 +102,6 @@ class DriverActivity : ComponentActivity() {
 
                     recyclerView.adapter = RideQueueAdapter(rides, driverId, isDriverView = true)
 
-                    // 👇 NEW LOGIC HERE
                     val hereButton = findViewById<Button>(R.id.hereButton)
                     hereButton.visibility = if (rides.isNotEmpty()) Button.VISIBLE else Button.GONE
                 } else {
@@ -177,6 +175,35 @@ class DriverActivity : ComponentActivity() {
             }
         }
     }
+
+    private fun handleEndShift(switching: Boolean) {
+        lifecycleScope.launch {
+            try {
+                if (switching) {
+                    val switchResponse = apiService.setDriverSwitching(
+                        com.example.saferidesapplication.network.dto.DriverSwitchRequest(true)
+                    )
+                    if (!switchResponse.isSuccessful) {
+                        Toast.makeText(this@DriverActivity, "Failed to notify passengers", Toast.LENGTH_SHORT).show()
+                        return@launch
+                    }
+                }
+
+                val shiftOffResponse = apiService.updateDriverShift(driverId, ShiftUpdateRequest(onShift = false))
+                if (shiftOffResponse.isSuccessful) {
+                    val intent = Intent(this@DriverActivity, MainActivity::class.java)
+                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    startActivity(intent)
+                    finish()
+                } else {
+                    Toast.makeText(this@DriverActivity, "Failed to end shift", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(this@DriverActivity, "Error: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
 
 
 
