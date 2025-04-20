@@ -1,4 +1,3 @@
-import com.android.build.api.dsl.Packaging
 
 
 plugins {
@@ -73,6 +72,8 @@ dependencies {
     implementation(libs.converter.scalars)
     implementation("androidx.lifecycle:lifecycle-process:2.6.2")
     implementation(libs.androidx.lifecycle.process)
+    implementation(libs.google.firebase.firestore.ktx)
+    implementation(libs.firebase.common.ktx)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

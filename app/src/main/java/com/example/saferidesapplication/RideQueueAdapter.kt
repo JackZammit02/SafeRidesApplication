@@ -1,5 +1,6 @@
 package com.example.saferidesapplication
 
+import android.annotation.SuppressLint
 import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
@@ -8,12 +9,11 @@ import android.widget.TextView
 import androidx.cardview.widget.CardView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.saferidesapplication.network.dto.RideResponse
+import androidx.core.graphics.toColorInt
 
 class RideQueueAdapter(
-
-    private val rides: List<RideResponse>,
     private val currentUserId: String,
-    private val isDriverView: Boolean,
+    private val isDriverView: Boolean
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     companion object {
@@ -21,19 +21,9 @@ class RideQueueAdapter(
         private const val TYPE_FOOTER = 1
     }
 
-    private val visibleRides: List<RideResponse> = buildList {
-        val assignedToDriver = rides.filter {
-            it.driverId == currentUserId && it.status in listOf("assigned", "arrived",  "in_progress")
-        }
-        val queued = rides.filter { it.status == "queued" }
-        val shownQueued = if (queued.size > 8) queued.take(8) else queued
-
-        addAll(assignedToDriver)
-        addAll(shownQueued)
-    }
-
-    private val hasFooter = rides.count { it.status == "queued" } > 8
-    private val hiddenCount = rides.count { it.status == "queued" } - 8
+    private val visibleRides: MutableList<RideResponse> = mutableListOf()
+    private var hasFooter = false
+    private var hiddenCount = 0
 
     inner class RideViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val pickupText: TextView = view.findViewById(R.id.pickupText)
@@ -41,8 +31,6 @@ class RideQueueAdapter(
         val passengerCountText: TextView = view.findViewById(R.id.passengerCountText)
         val card: CardView = view.findViewById(R.id.rideCard)
     }
-
-
 
     inner class FooterViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val footerText: TextView = view.findViewById(R.id.footerText)
@@ -64,6 +52,7 @@ class RideQueueAdapter(
         }
     }
 
+    @SuppressLint("SetTextI18n")
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         if (holder is RideViewHolder) {
             val ride = visibleRides[position]
@@ -71,25 +60,22 @@ class RideQueueAdapter(
             holder.dropoffText.text = "Dropoff: ${ride.dropoffLocation}"
             holder.passengerCountText.text = "Passengers: ${ride.passengerCount}"
             if (!isDriverView) {
-                // Passenger view: highlight their own ride
                 if (ride.passengerId == currentUserId) {
-                    holder.card.setCardBackgroundColor(Color.parseColor("#C8E6C9")) // green
+                    holder.card.setCardBackgroundColor("#C8E6C9".toColorInt()) // green
                 } else {
                     holder.card.setCardBackgroundColor(Color.WHITE)
                 }
             } else {
-                // Driver view
                 when {
                     ride.driverId == currentUserId && ride.status in listOf("assigned", "arrived", "in_progress") -> {
-                        holder.card.setCardBackgroundColor(Color.parseColor("#C8E6C9")) // green
+                        holder.card.setCardBackgroundColor("#C8E6C9".toColorInt()) // green
                     }
                     else -> {
-                        // Check if this is the first visible queued ride
                         val isFirstQueued = ride.status == "queued" &&
                                 visibleRides.indexOfFirst { it.status == "queued" } == position
 
                         if (isFirstQueued) {
-                            holder.card.setCardBackgroundColor(Color.parseColor("#FFECB3")) // yellow for next ride
+                            holder.card.setCardBackgroundColor("#FFECB3".toColorInt()) // yellow
                         } else {
                             holder.card.setCardBackgroundColor(Color.WHITE)
                         }
@@ -101,9 +87,21 @@ class RideQueueAdapter(
         }
     }
 
-
     override fun getItemCount(): Int {
         return visibleRides.size + if (hasFooter) 1 else 0
     }
-}
 
+    fun updateData(newRides: List<RideResponse>) {
+        val assignedToDriver = newRides.filter {
+            it.driverId == currentUserId && it.status in listOf("assigned", "arrived", "in_progress")
+        }
+        val queued = newRides.filter { it.status == "queued" }
+        val shownQueued = if (queued.size > 8) queued.take(8) else queued
+
+        hasFooter = queued.size > 8
+        hiddenCount = queued.size - shownQueued.size
+
+        visibleRides.clear()
+        visibleRides.addAll(assignedToDriver + shownQueued)
+    }
+}

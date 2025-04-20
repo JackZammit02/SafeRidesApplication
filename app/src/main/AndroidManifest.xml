@@ -22,8 +22,6 @@
         <activity
             android:name=".AccessCodeActivity"
             android:exported="false" />
-        <activity android:name=".QueuePreviewActivity" />
-        <activity android:name=".WaitingListActivity" />
         <activity
             android:name=".DriverActivity"
             android:exported="false" />

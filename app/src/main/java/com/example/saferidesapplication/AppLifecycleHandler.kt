@@ -23,7 +23,6 @@ class AppLifecycleHandler(private val app: Application) : DefaultLifecycleObserv
                 try {
                     val response = ApiClient.apiService.logoutDriver(userId)
                     if (response.isSuccessful) {
-                        // 🔥 Clear user ID from SharedPreferences
                         app.getSharedPreferences("SafeRidesPrefs", Application.MODE_PRIVATE)
                             .edit()
                             .remove("userId")

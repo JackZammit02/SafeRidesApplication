@@ -3,7 +3,6 @@ package com.example.saferidesapplication
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
-
 import android.widget.Button
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -11,20 +10,19 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.saferidesapplication.network.ApiClient.apiService
-import com.example.saferidesapplication.network.dto.ShiftUpdateRequest
-
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
+import com.google.firebase.firestore.ListenerRegistration
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.launch
 
 class DriverActivity : ComponentActivity() {
 
     private lateinit var recyclerView: RecyclerView
+    private lateinit var rideQueueAdapter: RideQueueAdapter
     private val driverId: String by lazy {
         getSharedPreferences("SafeRidesPrefs", MODE_PRIVATE).getString("userId", "") ?: ""
     }
-    private var pollingJob: Job? = null
+    private var rideListenerRegistration: ListenerRegistration? = null
     private var currentRideId: String? = null
     private var currentStage = 0
 
@@ -38,16 +36,14 @@ class DriverActivity : ComponentActivity() {
         recyclerView = findViewById(R.id.driverRideQueue)
         recyclerView.layoutManager = LinearLayoutManager(this)
 
+        rideQueueAdapter = RideQueueAdapter(driverId, isDriverView = true)
+        recyclerView.adapter = rideQueueAdapter
 
 
-
-        startPollingQueue()
-
+        listenToRideQueue()
 
         val endShiftButton: Button = findViewById(R.id.endShiftButton)
         val actionButton: Button = findViewById(R.id.hereButton)
-
-
 
         endShiftButton.setOnClickListener {
             val dialogView = layoutInflater.inflate(R.layout.dialog_end_shift, null)
@@ -68,8 +64,6 @@ class DriverActivity : ComponentActivity() {
             alertDialog.show()
         }
 
-
-
         actionButton.setOnClickListener {
             when (currentStage) {
                 0 -> assignNextRide(actionButton)
@@ -80,39 +74,26 @@ class DriverActivity : ComponentActivity() {
         }
     }
 
-    private fun startPollingQueue() {
-        pollingJob = lifecycleScope.launch {
-            while (isActive) {
-                loadRideQueue()
-                delay(5000)
+    private fun listenToRideQueue() {
+        rideListenerRegistration?.remove() // Avoid duplicate listeners
+
+        val db = Firebase.firestore
+        rideListenerRegistration = db.collection("rides")
+            .addSnapshotListener { snapshot, error ->
+                if (error != null || snapshot == null) return@addSnapshotListener
+
+                val rides = snapshot.toObjects(com.example.saferidesapplication.network.dto.RideResponse::class.java)
+                    .filter {
+                        it.status == "queued" || (it.driverId == driverId && it.status in listOf("assigned", "arrived", "in_progress"))
+                    }
+                    .sortedBy { it.timestamp }
+
+                rideQueueAdapter.updateData(rides)
+                rideQueueAdapter.notifyDataSetChanged()
+
+                findViewById<Button>(R.id.hereButton).visibility = if (rides.isNotEmpty()) Button.VISIBLE else Button.GONE
             }
-        }
     }
-
-    private fun loadRideQueue() {
-        lifecycleScope.launch {
-            try {
-                val response = apiService.getAllRides()
-                if (response.isSuccessful && response.body() != null) {
-                    val rides = response.body()!!
-                        .filter {
-                            it.status == "queued" || (it.driverId == driverId && it.status in listOf("assigned", "arrived", "in_progress"))
-                        }
-                        .sortedBy { it.timestamp }
-
-                    recyclerView.adapter = RideQueueAdapter(rides, driverId, isDriverView = true)
-
-                    val hereButton = findViewById<Button>(R.id.hereButton)
-                    hereButton.visibility = if (rides.isNotEmpty()) Button.VISIBLE else Button.GONE
-                } else {
-                    Toast.makeText(this@DriverActivity, "Could not load rides", Toast.LENGTH_SHORT).show()
-                }
-            } catch (e: Exception) {
-                Toast.makeText(this@DriverActivity, "Error: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
-
 
     private fun assignNextRide(button: Button) {
         button.isEnabled = false
@@ -126,7 +107,6 @@ class DriverActivity : ComponentActivity() {
                     button.text = "At Pick-Up"
                     button.setBackgroundColor(Color.YELLOW)
                     Toast.makeText(this@DriverActivity, "Assigned ride: ${ride.rideId}", Toast.LENGTH_SHORT).show()
-                    loadRideQueue()
                 } else {
                     Toast.makeText(this@DriverActivity, "No rides to assign", Toast.LENGTH_SHORT).show()
                 }
@@ -160,9 +140,7 @@ class DriverActivity : ComponentActivity() {
                         "completed" -> button.setBackgroundColor(Color.parseColor("#6200EE"))
                     }
                     if (reset) currentRideId = null
-                    loadRideQueue()
                 } else {
-                    // NEW LOGGING
                     val errorBody = response.errorBody()?.string()
                     Toast.makeText(this@DriverActivity, "Failed to update status: ${response.code()}", Toast.LENGTH_SHORT).show()
                     android.util.Log.e("API_ERROR", "Status update failed: $errorBody")
@@ -199,13 +177,8 @@ class DriverActivity : ComponentActivity() {
         }
     }
 
-
-
-
-
-
     override fun onDestroy() {
         super.onDestroy()
-        pollingJob?.cancel()
+        rideListenerRegistration?.remove()
     }
 }
