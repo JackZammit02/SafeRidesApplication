@@ -37,25 +37,23 @@ class AccessCodeActivity : ComponentActivity() {
             // Send access code to backend
             lifecycleScope.launch {
                 try {
-                    val response = ApiClient.apiService.verifyAccessCode(AccessCode(accessCode))
-                    when (response.code()) {
-                        201 -> {
-                            // Save driver ID in shared preferences
-                            getSharedPreferences("SafeRidesPrefs", MODE_PRIVATE)
-                                .edit()
-                                .putString("userId", accessCode)
-                                .apply()
+                    val response = ApiClient.apiService.loginDriver(AccessCode(accessCode))
+                    if (response.isSuccessful) {
+                        getSharedPreferences("SafeRidesPrefs", MODE_PRIVATE)
+                            .edit()
+                            .putString("userId", accessCode)
+                            .apply()
 
-                            // Navigate to DriverActivity
-                            val intent = Intent(this@AccessCodeActivity, DriverActivity::class.java)
-                            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                            startActivity(intent)
-                            finish()
+                        val intent = Intent(this@AccessCodeActivity, DriverActivity::class.java)
+                        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                        startActivity(intent)
+                        finish()
+                    } else {
+                        when (response.code()) {
+                            403 -> showToast("Too many drivers are logged in.")
+                            404 -> showToast("Access code not recognized.")
+                            else -> showToast("Error: ${response.code()}")
                         }
-                        403 -> showToast("Too many drivers are logged in.")
-                        409 -> showToast("This driver is already on shift.")
-                        404 -> showToast("Access code not recognized.")
-                        else -> showToast("Error: ${response.code()}")
                     }
                 } catch (e: Exception) {
                     showToast("Login failed: ${e.localizedMessage}")

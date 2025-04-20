@@ -1,3 +1,4 @@
+// Updated MainActivity.kt
 package com.example.saferidesapplication
 
 import android.content.Intent
@@ -30,13 +31,25 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        lifecycleScope.launch {
+            try {
+                val response = ApiClient.apiService.getAllRides()
+                if (response.isSuccessful) {
+                    Log.d("BACKEND_TEST", "✅ Connected! Rides count: ${response.body()?.size}")
+                } else {
+                    Log.e("BACKEND_TEST", "❌ Response failed: ${response.code()}")
+                }
+            } catch (e: Exception) {
+                Log.e("BACKEND_TEST", "❌ Connection failed: ${e.localizedMessage}")
+            }
+        }
+
         val driverButton: Button = findViewById(R.id.driverButton)
         val passengerButton: Button = findViewById(R.id.passengerButton)
         val cancelRideButton: Button = findViewById(R.id.cancelRideButton)
         val driverId: String by lazy {
             getSharedPreferences("SafeRidesPrefs", MODE_PRIVATE).getString("userId", "") ?: ""
         }
-
 
         driverButton.setOnClickListener {
             val intent = Intent(this, AccessCodeActivity::class.java)
@@ -121,14 +134,6 @@ class MainActivity : ComponentActivity() {
                 val driversResponse = ApiClient.apiService.getAllDrivers()
                 val activeDrivers = driversResponse.body()?.count { it.onShift } ?: 0
 
-                val switchStatusResponse = try {
-                    ApiClient.apiService.getDriverSwitchingStatus()
-                } catch (e: Exception) {
-                    null
-                }
-
-                val switchingDrivers = switchStatusResponse?.body()?.driverSwitchInProgress == true
-
                 val ridesResponse = ApiClient.apiService.getAllRides()
                 if (ridesResponse.isSuccessful) {
                     val rideList = ridesResponse.body()
@@ -150,16 +155,9 @@ class MainActivity : ComponentActivity() {
                         val driverButton = findViewById<Button>(R.id.driverButton)
                         val driverStatusTextView = findViewById<TextView>(R.id.driverAvailabilityStatusTextView)
 
-                        // 🧠 Option 3 logic in one clean block
-                        val driverStatus = when {
-                            activeDrivers == 0 && switchingDrivers -> "Drivers are switching — please expect delays"
-                            activeDrivers == 0 -> "No drivers currently available"
-                            switchingDrivers -> "$activeDrivers driver${if (activeDrivers > 1) "s" else ""} active — switching in progress"
-                            else -> "$activeDrivers driver${if (activeDrivers > 1) "s" else ""} active"
-                        }
+                        val driverStatus = "$activeDrivers driver${if (activeDrivers != 1) "s" else ""} active"
                         driverStatusTextView.text = driverStatus
 
-                        // UI state
                         requestButton.isEnabled = activeDrivers > 0 && !hasActiveRide
                         requestButton.alpha = if (requestButton.isEnabled) 1.0f else 0.5f
 
@@ -176,8 +174,6 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-
-
 
     private fun updatePassengerRidePosition(queuedRides: List<RideResponse>) {
         val passengerRideStatusTextView: TextView = findViewById(R.id.passengerRideStatusTextView)

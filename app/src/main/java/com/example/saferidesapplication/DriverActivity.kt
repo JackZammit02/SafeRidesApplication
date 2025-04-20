@@ -179,18 +179,13 @@ class DriverActivity : ComponentActivity() {
     private fun handleEndShift(switching: Boolean) {
         lifecycleScope.launch {
             try {
-                if (switching) {
-                    val switchResponse = apiService.setDriverSwitching(
-                        com.example.saferidesapplication.network.dto.DriverSwitchRequest(true)
-                    )
-                    if (!switchResponse.isSuccessful) {
-                        Toast.makeText(this@DriverActivity, "Failed to notify passengers", Toast.LENGTH_SHORT).show()
-                        return@launch
-                    }
+                val response = if (switching) {
+                    apiService.switchDriver(driverId)
+                } else {
+                    apiService.logoutDriver(driverId)
                 }
 
-                val shiftOffResponse = apiService.updateDriverShift(driverId, ShiftUpdateRequest(onShift = false))
-                if (shiftOffResponse.isSuccessful) {
+                if (response.isSuccessful) {
                     val intent = Intent(this@DriverActivity, MainActivity::class.java)
                     intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                     startActivity(intent)
@@ -203,6 +198,7 @@ class DriverActivity : ComponentActivity() {
             }
         }
     }
+
 
 
 

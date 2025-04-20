@@ -16,14 +16,19 @@ interface ApiService {
     @GET("/users/{id}")
     suspend fun getUser(@Path("id") id: String): Response<UserResponse>
 
-    @POST("/users/{id}/shift")
-    suspend fun updateDriverShift(
-        @Path("id") id: String,
-        @Body request: ShiftUpdateRequest
-    ): Response<String>
+    @GET("/users/drivers")
+    suspend fun getAllDrivers(): Response<List<UserResponse>>
 
-    @POST("/users/verify-access-code")
-    suspend fun verifyAccessCode(@Body code: AccessCode): Response<String>
+    //driver login/switch/logout
+    @POST("/users/drivers/login")
+    suspend fun loginDriver(@Body code: AccessCode): Response<String>
+
+    @POST("/users/drivers/switch")
+    suspend fun switchDriver(@Query("driverId") driverId: String): Response<String>
+
+    @POST("/users/drivers/logout")
+    suspend fun logoutDriver(@Query("driverId") driverId: String): Response<String>
+
     // --- RIDE ROUTES ---
 
     @POST("/rides/request")
@@ -41,19 +46,9 @@ interface ApiService {
         @Body request: CancelRideRequest
     ): Response<String>
 
-    @GET("users/drivers")
-    suspend fun getAllDrivers(): Response<List<UserResponse>>
-
     @POST("/rides/{rideId}/status")
     suspend fun updateRideStatus(
         @Path("rideId") rideId: String,
         @Query("status") status: String
     ): Response<Unit>
-
-    @POST("/rides/driver-switch")
-    suspend fun setDriverSwitching(@Body request: DriverSwitchRequest): Response<String>
-
-    @GET("/rides/driver-switch/status")
-    suspend fun getDriverSwitchingStatus(): Response<DriverSwitchStatusResponse>
-
 }
