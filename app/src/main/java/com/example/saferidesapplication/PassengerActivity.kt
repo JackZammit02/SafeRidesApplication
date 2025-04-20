@@ -2,14 +2,15 @@ package com.example.saferidesapplication
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.widget.*
-import androidx.activity.ComponentActivity
+import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.example.saferidesapplication.network.ApiClient
 import com.example.saferidesapplication.network.dto.RideRequest
 import kotlinx.coroutines.launch
 
-class PassengerActivity : ComponentActivity() {
+class PassengerActivity : AppCompatActivity() {
 
     private lateinit var pickupSpinner: Spinner
     private lateinit var dropOffSpinner: Spinner
@@ -64,11 +65,10 @@ class PassengerActivity : ComponentActivity() {
                     val response = ApiClient.apiService.requestRide(rideRequest)
                     if (response.isSuccessful) {
                         Toast.makeText(this@PassengerActivity, "Ride successfully requested!", Toast.LENGTH_LONG).show()
-                        // Go back to MainActivity
                         val intent = Intent(this@PassengerActivity, MainActivity::class.java)
-                        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
                         startActivity(intent)
                         finish()
+
                     } else {
                         Toast.makeText(this@PassengerActivity, "Request failed: ${response.code()}", Toast.LENGTH_LONG).show()
                     }

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="24dp"
+    android:background="@android:color/transparent">
+
+    <LinearLayout
+        android:id="@+id/timelineLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center">
+
+        <TextView
+            android:id="@+id/timelineStepQueued"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Queued"
+            android:textSize="20sp"
+            android:textColor="#AAAAAA"
+            android:layout_marginBottom="12dp" />
+
+        <TextView
+            android:id="@+id/timelineStepAssigned"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="On the Way"
+            android:textSize="20sp"
+            android:textColor="#AAAAAA"
+            android:layout_marginBottom="12dp" />
+
+        <TextView
+            android:id="@+id/timelineStepArrived"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="At Pick Up"
+            android:textSize="20sp"
+            android:textColor="#AAAAAA"
+            android:layout_marginBottom="12dp" />
+
+        <TextView
+            android:id="@+id/timelineStepPickedUp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Picked Up"
+            android:textSize="20sp"
+            android:textColor="#AAAAAA"
+            android:layout_marginBottom="12dp" />
+
+        <TextView
+            android:id="@+id/timelineStepCompleted"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Completed"
+            android:textSize="20sp"
+            android:textColor="#AAAAAA"
+            android:layout_marginBottom="12dp" />
+    </LinearLayout>
+</ScrollView>

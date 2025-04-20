@@ -1,4 +1,3 @@
-// Updated MainActivity.kt
 package com.example.saferidesapplication
 
 import android.content.Intent
@@ -7,23 +6,22 @@ import android.util.Log
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
-import androidx.activity.ComponentActivity
+import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
+import androidx.viewpager2.widget.ViewPager2
 import com.example.saferidesapplication.network.ApiClient
 import com.example.saferidesapplication.network.dto.CancelRideRequest
 import com.example.saferidesapplication.network.dto.CreateUserRequest
 import com.example.saferidesapplication.network.dto.CreateUserResponse
-import com.example.saferidesapplication.network.dto.RideResponse
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
-class MainActivity : ComponentActivity() {
 
-    private lateinit var recyclerView: RecyclerView
+class MainActivity : AppCompatActivity() {
+
+    private lateinit var viewPager: ViewPager2
     private lateinit var passengerId: String
     private var pollingJob: Job? = null
 
@@ -31,25 +29,16 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        lifecycleScope.launch {
-            try {
-                val response = ApiClient.apiService.getAllRides()
-                if (response.isSuccessful) {
-                    Log.d("BACKEND_TEST", "✅ Connected! Rides count: ${response.body()?.size}")
-                } else {
-                    Log.e("BACKEND_TEST", "❌ Response failed: ${response.code()}")
-                }
-            } catch (e: Exception) {
-                Log.e("BACKEND_TEST", "❌ Connection failed: ${e.localizedMessage}")
-            }
-        }
+        viewPager = findViewById(R.id.viewPager)
+        viewPager.adapter = PassengerPagerAdapter(this) // must come BEFORE
+
 
         val driverButton: Button = findViewById(R.id.driverButton)
         val passengerButton: Button = findViewById(R.id.passengerButton)
         val cancelRideButton: Button = findViewById(R.id.cancelRideButton)
-        val driverId: String by lazy {
-            getSharedPreferences("SafeRidesPrefs", MODE_PRIVATE).getString("userId", "") ?: ""
-        }
+
+        val sharedPreferences = getSharedPreferences("SafeRidesPrefs", MODE_PRIVATE)
+        passengerId = sharedPreferences.getString("userId", null) ?: "unknown"
 
         driverButton.setOnClickListener {
             val intent = Intent(this, AccessCodeActivity::class.java)
@@ -57,133 +46,41 @@ class MainActivity : ComponentActivity() {
         }
 
         passengerButton.setOnClickListener {
-            registerPassenger()
+            val intent = Intent(this, PassengerActivity::class.java)
+            startActivity(intent)
         }
 
         cancelRideButton.setOnClickListener {
             cancelActiveRide()
         }
 
-        val sharedPreferences = getSharedPreferences("SafeRidesPrefs", MODE_PRIVATE)
-        passengerId = sharedPreferences.getString("userId", null) ?: "unknown"
-
-        recyclerView = findViewById(R.id.rideQueueRecyclerView)
-        recyclerView.layoutManager = LinearLayoutManager(this)
-
         startPollingQueue()
     }
 
-    override fun onResume() {
-        super.onResume()
-
-        val sharedPreferences = getSharedPreferences("SafeRidesPrefs", MODE_PRIVATE)
-        passengerId = sharedPreferences.getString("userId", null) ?: "unknown"
-        Log.d("PASSENGER_ID", "Refreshed in onResume(): $passengerId")
-
-        loadRideQueue()
-
-        if (pollingJob == null || pollingJob?.isActive == false) {
-            startPollingQueue()
-        }
-    }
-
-    private fun registerPassenger() {
+    private fun registerPassenger(onSuccess: (() -> Unit)? = null) {
         lifecycleScope.launch {
             try {
-                val requestBody = CreateUserRequest(
-                    role = "passenger",
-                    onShift = false
-                )
-
+                val requestBody = CreateUserRequest(role = "passenger", onShift = false)
                 val response = ApiClient.apiService.createUser(requestBody)
 
                 if (response.isSuccessful) {
                     val responseBody = response.body() as CreateUserResponse
                     val userId = responseBody.userId
 
-                    val sharedPreferences = getSharedPreferences("SafeRidesPrefs", MODE_PRIVATE)
-                    sharedPreferences.edit().putString("userId", userId).apply()
+                    getSharedPreferences("SafeRidesPrefs", MODE_PRIVATE)
+                        .edit().putString("userId", userId).apply()
 
-                    Log.d("API_RESPONSE", "User created with ID: $userId")
+                    passengerId = userId
+                    onSuccess?.invoke()
 
                     val intent = Intent(this@MainActivity, PassengerActivity::class.java)
                     startActivity(intent)
                 } else {
-                    Toast.makeText(this@MainActivity, "User creation failed: ${response.code()}", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this@MainActivity, "User creation failed", Toast.LENGTH_LONG).show()
                 }
             } catch (e: Exception) {
                 Toast.makeText(this@MainActivity, "Error: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
-                e.printStackTrace()
             }
-        }
-    }
-
-    private fun startPollingQueue() {
-        pollingJob?.cancel()
-        pollingJob = lifecycleScope.launch {
-            while (isActive) {
-                loadRideQueue()
-                delay(5000)
-            }
-        }
-    }
-
-    private fun loadRideQueue() {
-        lifecycleScope.launch {
-            try {
-                val driversResponse = ApiClient.apiService.getAllDrivers()
-                val activeDrivers = driversResponse.body()?.count { it.onShift } ?: 0
-
-                val ridesResponse = ApiClient.apiService.getAllRides()
-                if (ridesResponse.isSuccessful) {
-                    val rideList = ridesResponse.body()
-
-                    if (rideList != null) {
-                        val queuedRides = rideList.filter { it.status == "queued" }
-                            .sortedBy { it.timestamp }
-
-                        recyclerView.adapter = RideQueueAdapter(queuedRides, passengerId, isDriverView = false)
-
-                        updatePassengerRidePosition(queuedRides)
-
-                        val hasActiveRide = rideList.any {
-                            it.passengerId == passengerId && it.status in listOf("queued", "assigned", "arrived")
-                        }
-
-                        val requestButton = findViewById<Button>(R.id.passengerButton)
-                        val cancelButton = findViewById<Button>(R.id.cancelRideButton)
-                        val driverButton = findViewById<Button>(R.id.driverButton)
-                        val driverStatusTextView = findViewById<TextView>(R.id.driverAvailabilityStatusTextView)
-
-                        val driverStatus = "$activeDrivers driver${if (activeDrivers != 1) "s" else ""} active"
-                        driverStatusTextView.text = driverStatus
-
-                        requestButton.isEnabled = activeDrivers > 0 && !hasActiveRide
-                        requestButton.alpha = if (requestButton.isEnabled) 1.0f else 0.5f
-
-                        cancelButton.visibility = if (hasActiveRide) Button.VISIBLE else Button.GONE
-
-                        driverButton.isEnabled = !hasActiveRide
-                        driverButton.alpha = if (hasActiveRide) 0.5f else 1.0f
-                    }
-                } else {
-                    Toast.makeText(this@MainActivity, "Could not load queue", Toast.LENGTH_SHORT).show()
-                }
-            } catch (e: Exception) {
-                Toast.makeText(this@MainActivity, "Error: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
-
-    private fun updatePassengerRidePosition(queuedRides: List<RideResponse>) {
-        val passengerRideStatusTextView: TextView = findViewById(R.id.passengerRideStatusTextView)
-
-        val passengerRideIndex = queuedRides.indexOfFirst { it.passengerId == passengerId }
-
-        passengerRideStatusTextView.text = if (passengerRideIndex != -1) {
-            "Your ride is in position: ${passengerRideIndex + 1}"
-        } else {
-            "Your ride is not in the queue"
         }
     }
 
@@ -201,21 +98,79 @@ class MainActivity : ComponentActivity() {
                         return@launch
                     }
 
-                    val cancelRequest = CancelRideRequest(
-                        userId = passengerId,
-                        isDriver = false
-                    )
-
+                    val cancelRequest = CancelRideRequest(userId = passengerId, isDriver = false)
                     val cancelResponse = ApiClient.apiService.cancelRide(myRide.rideId, cancelRequest)
+
                     if (cancelResponse.isSuccessful) {
                         Toast.makeText(this@MainActivity, "Ride cancelled", Toast.LENGTH_SHORT).show()
-                        loadRideQueue()
                     } else {
-                        Toast.makeText(this@MainActivity, "Cancel failed: ${cancelResponse.code()}", Toast.LENGTH_LONG).show()
+                        Toast.makeText(this@MainActivity, "Cancel failed", Toast.LENGTH_LONG).show()
                     }
                 }
             } catch (e: Exception) {
                 Toast.makeText(this@MainActivity, "Error: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private suspend fun updateDriverStatusAndRideButton() {
+        try {
+            val driverStatusTextView: TextView = findViewById(R.id.driverAvailabilityStatusTextView)
+            val passengerButton: Button = findViewById(R.id.passengerButton)
+
+            val response = ApiClient.apiService.getAllDrivers()
+            if (response.isSuccessful) {
+                val drivers = response.body() ?: emptyList()
+                val activeDrivers = drivers.filter { it.onShift == true }
+
+                driverStatusTextView.text = "${activeDrivers.size} drivers on shift"
+
+                passengerButton.isEnabled = activeDrivers.isNotEmpty()
+                passengerButton.alpha = if (activeDrivers.isNotEmpty()) 1f else 0.5f
+
+            } else {
+                driverStatusTextView.text = "Error fetching driver status"
+                passengerButton.isEnabled = false
+                passengerButton.alpha = 0.5f
+            }
+        } catch (e: Exception) {
+            findViewById<TextView>(R.id.driverAvailabilityStatusTextView).text = "Network error"
+            findViewById<Button>(R.id.passengerButton).apply {
+                isEnabled = false
+                alpha = 0.5f
+            }
+        }
+    }
+
+    private suspend fun updatePassengerQueuePosition() {
+        try {
+            val response = ApiClient.apiService.getAllRides()
+            if (response.isSuccessful) {
+                val rides = response.body() ?: emptyList()
+                val queuedRides = rides.filter { it.status == "queued" }.sortedBy { it.timestamp }
+
+                val myPosition = queuedRides.indexOfFirst { it.passengerId == passengerId } + 1
+                val statusTextView: TextView = findViewById(R.id.passengerRideStatusTextView)
+
+                if (myPosition > 0) {
+                    statusTextView.text = "Your ride is in position: $myPosition"
+                } else {
+                    statusTextView.text = "You are not in the queue"
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("MainActivity", "Failed to update queue position: ${e.message}")
+        }
+    }
+
+
+    private fun startPollingQueue() {
+        pollingJob?.cancel()
+        pollingJob = lifecycleScope.launch {
+            while (isActive) {
+                updateDriverStatusAndRideButton()
+                updatePassengerQueuePosition()  // 👈 Add this
+                delay(5000)
             }
         }
     }
