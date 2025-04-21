@@ -1,5 +1,6 @@
 package com.example.saferidesapplication
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -17,6 +18,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import androidx.core.content.edit
 
 
 class MainActivity : AppCompatActivity() {
@@ -68,7 +70,7 @@ class MainActivity : AppCompatActivity() {
                     val userId = responseBody.userId
 
                     getSharedPreferences("SafeRidesPrefs", MODE_PRIVATE)
-                        .edit().putString("userId", userId).apply()
+                        .edit() { putString("userId", userId) }
 
                     passengerId = userId
                     onSuccess?.invoke()
@@ -113,6 +115,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    @SuppressLint("CutPasteId", "SetTextI18n")
     private suspend fun updateDriverStatusAndRideButton() {
         try {
             val driverStatusTextView: TextView = findViewById(R.id.driverAvailabilityStatusTextView)
@@ -142,6 +145,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    @SuppressLint("SetTextI18n")
     private suspend fun updatePassengerQueuePosition() {
         try {
             val response = ApiClient.apiService.getAllRides()

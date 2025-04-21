@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "284316910995",
+    "project_id": "saferides-ac9e4",
+    "storage_bucket": "saferides-ac9e4.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:284316910995:android:26976109b7974bf4481466",
+        "android_client_info": {
+          "package_name": "com.example.saferidesapplication"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB7GI3bAj84S1rHE-3SutMFIglCNGFdQdU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
