@@ -3,6 +3,7 @@ package com.example.saferidesapplication
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
+import android.view.View
 import android.widget.Button
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -13,6 +14,8 @@ import com.example.saferidesapplication.network.ApiClient.apiService
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class DriverActivity : ComponentActivity() {
@@ -25,6 +28,9 @@ class DriverActivity : ComponentActivity() {
     private var rideListenerRegistration: ListenerRegistration? = null
     private var currentRideId: String? = null
     private var currentStage = 0
+    private var arrivalCountdownJob: Job? = null
+    private lateinit var cancelRideButton: Button
+
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -72,6 +78,16 @@ class DriverActivity : ComponentActivity() {
                 3 -> updateRideStatus("completed", actionButton, "Next Ride", 0, reset = true)
             }
         }
+
+        cancelRideButton = findViewById(R.id.cancelRideButton)
+        cancelRideButton.text = "Cancel Ride (No Show)"
+        cancelRideButton.isEnabled = false
+        cancelRideButton.alpha = 0.5f
+        cancelRideButton.visibility = View.GONE
+        cancelRideButton.setOnClickListener {
+            cancelCurrentRide()
+        }
+
     }
 
     private fun listenToRideQueue() {
@@ -152,11 +168,37 @@ class DriverActivity : ComponentActivity() {
                     button.text = nextLabel
                     currentStage = nextStage
                     when (status) {
-                        "arrived" -> button.setBackgroundColor(Color.CYAN)
-                        "picked_up" -> button.setBackgroundColor(Color.LTGRAY)
-                        "completed" -> button.setBackgroundColor(Color.parseColor("#6200EE"))
+                        "arrived" -> {
+                            button.setBackgroundColor(Color.CYAN)
+                            startArrivalCountdown() // Start the 2-minute timer
+                        }
+                        "picked_up" -> {
+                            button.setBackgroundColor(Color.LTGRAY)
+                            arrivalCountdownJob?.cancel()
+                            cancelRideButton.text = "Cancel Ride (No Show)"
+                            cancelRideButton.isEnabled = false
+                            cancelRideButton.alpha = 0.5f
+                            cancelRideButton.visibility = View.GONE
+                        }
+                        "completed" -> {
+                            button.setBackgroundColor(Color.parseColor("#6200EE"))
+                            arrivalCountdownJob?.cancel()
+                            cancelRideButton.text = "Cancel Ride (No Show)"
+                            cancelRideButton.isEnabled = false
+                            cancelRideButton.alpha = 0.5f
+                            cancelRideButton.visibility = View.GONE
+                        }
                     }
-                    if (reset) currentRideId = null
+
+                    if (reset) {
+                        currentRideId = null
+                        arrivalCountdownJob?.cancel()
+                        cancelRideButton.text = "Cancel Ride (No Show)"
+                        cancelRideButton.isEnabled = false
+                        cancelRideButton.alpha = 0.5f
+                        cancelRideButton.visibility = View.GONE
+                    }
+
                 } else {
                     val errorBody = response.errorBody()?.string()
                     Toast.makeText(this@DriverActivity, "Failed to update status: ${response.code()}", Toast.LENGTH_SHORT).show()
@@ -194,8 +236,71 @@ class DriverActivity : ComponentActivity() {
         }
     }
 
+    private fun startArrivalCountdown() {
+        arrivalCountdownJob?.cancel()
+
+        cancelRideButton.isEnabled = false
+        cancelRideButton.alpha = 0.5f  // visually grayed out
+        cancelRideButton.visibility = View.VISIBLE
+
+        arrivalCountdownJob = lifecycleScope.launch {
+            var secondsLeft = 2 * 60  // 2 minutes
+
+            while (secondsLeft > 0) {
+                val minutes = secondsLeft / 60
+                val seconds = secondsLeft % 60
+                cancelRideButton.text = String.format("Cancel (%d:%02d)", minutes, seconds)
+                delay(1000)
+                secondsLeft--
+            }
+
+            cancelRideButton.text = "Cancel Ride (No Show)"
+            cancelRideButton.isEnabled = true
+            cancelRideButton.alpha = 1f  // restore normal appearance
+        }
+    }
+
+
+    private fun cancelCurrentRide() {
+        if (currentStage >= 2) { // Stage 2 is "picked_up" or beyond
+            Toast.makeText(this@DriverActivity, "Cannot cancel — ride already in progress", Toast.LENGTH_SHORT).show()
+            cancelRideButton.text = "Cancel Ride (No Show)"
+            cancelRideButton.isEnabled = false
+            cancelRideButton.alpha = 0.5f
+            cancelRideButton.visibility = View.GONE
+            return
+        }
+
+        val rideId = currentRideId ?: return
+
+        lifecycleScope.launch {
+            try {
+                val response = apiService.cancelRide(
+                    rideId,
+                    com.example.saferidesapplication.network.dto.CancelRideRequest(driverId, true)
+                )
+                if (response.isSuccessful) {
+                    Toast.makeText(this@DriverActivity, "Ride cancelled due to no-show", Toast.LENGTH_SHORT).show()
+                    currentRideId = null
+                    currentStage = 0
+                    cancelRideButton.text = "Cancel Ride (No Show)"
+                    cancelRideButton.isEnabled = false
+                    cancelRideButton.alpha = 0.5f
+                    cancelRideButton.visibility = View.GONE
+                    findViewById<Button>(R.id.hereButton).text = "Next Ride"
+                } else {
+                    Toast.makeText(this@DriverActivity, "Failed to cancel ride", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(this@DriverActivity, "Error: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+
     override fun onDestroy() {
         super.onDestroy()
         rideListenerRegistration?.remove()
+        arrivalCountdownJob?.cancel()
     }
 }
