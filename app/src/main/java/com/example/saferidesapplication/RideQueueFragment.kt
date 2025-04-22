@@ -41,15 +41,13 @@ class RideQueueFragment : Fragment() {
         val db = Firebase.firestore
 
         db.collection("rides")
-            .whereEqualTo("status", "queued")
             .addSnapshotListener { snapshot, error ->
                 if (error != null || snapshot == null) return@addSnapshotListener
 
-                val queuedRides = snapshot.toObjects(RideResponse::class.java)
-                    .sortedBy { it.timestamp }
-
-                adapter.updateData(queuedRides)
+                val allRides = snapshot.toObjects(RideResponse::class.java)
+                adapter.updateData(allRides)
                 adapter.notifyDataSetChanged()
             }
     }
+
 }

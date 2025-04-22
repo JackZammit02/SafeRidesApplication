@@ -92,16 +92,28 @@ class RideQueueAdapter(
     }
 
     fun updateData(newRides: List<RideResponse>) {
-        val assignedToDriver = newRides.filter {
-            it.driverId == currentUserId && it.status in listOf("assigned", "arrived", "in_progress")
-        }
-        val queued = newRides.filter { it.status == "queued" }
-        val shownQueued = if (queued.size > 8) queued.take(8) else queued
-
-        hasFooter = queued.size > 8
-        hiddenCount = queued.size - shownQueued.size
-
         visibleRides.clear()
-        visibleRides.addAll(assignedToDriver + shownQueued)
+
+        if (isDriverView) {
+            val assignedToDriver = newRides.filter {
+                it.driverId == currentUserId && it.status in listOf("assigned", "arrived", "in_progress")
+            }
+            val queued = newRides.filter { it.status == "queued" }
+            val shownQueued = if (queued.size > 8) queued.take(8) else queued
+
+            hasFooter = queued.size > 8
+            hiddenCount = queued.size - shownQueued.size
+
+            visibleRides.addAll(assignedToDriver + shownQueued)
+        } else {
+            val passengerRides = newRides.filter {
+                it.passengerId == currentUserId && it.status != "completed"
+            }.sortedBy { it.timestamp }
+
+            visibleRides.addAll(passengerRides)
+            hasFooter = false
+            hiddenCount = 0
+        }
     }
+
 }
