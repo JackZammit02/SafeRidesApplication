@@ -83,7 +83,6 @@ class DriverActivity : ComponentActivity() {
         cancelRideButton.text = "Cancel Ride (No Show)"
         cancelRideButton.isEnabled = false
         cancelRideButton.alpha = 0.5f
-        cancelRideButton.visibility = View.GONE
         cancelRideButton.setOnClickListener {
             cancelCurrentRide()
         }
@@ -241,7 +240,6 @@ class DriverActivity : ComponentActivity() {
 
         cancelRideButton.isEnabled = false
         cancelRideButton.alpha = 0.5f  // visually grayed out
-        cancelRideButton.visibility = View.VISIBLE
 
         arrivalCountdownJob = lifecycleScope.launch {
             var secondsLeft = 2 * 60  // 2 minutes
@@ -267,7 +265,6 @@ class DriverActivity : ComponentActivity() {
             cancelRideButton.text = "Cancel Ride (No Show)"
             cancelRideButton.isEnabled = false
             cancelRideButton.alpha = 0.5f
-            cancelRideButton.visibility = View.GONE
             return
         }
 
@@ -286,7 +283,6 @@ class DriverActivity : ComponentActivity() {
                     cancelRideButton.text = "Cancel Ride (No Show)"
                     cancelRideButton.isEnabled = false
                     cancelRideButton.alpha = 0.5f
-                    cancelRideButton.visibility = View.GONE
                     findViewById<Button>(R.id.hereButton).text = "Next Ride"
                 } else {
                     Toast.makeText(this@DriverActivity, "Failed to cancel ride", Toast.LENGTH_SHORT).show()
