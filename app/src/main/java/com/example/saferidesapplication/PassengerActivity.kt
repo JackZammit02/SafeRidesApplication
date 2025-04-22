@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.edit
 import androidx.lifecycle.lifecycleScope
 import com.example.saferidesapplication.network.ApiClient
 import com.example.saferidesapplication.network.dto.RideRequest
@@ -64,11 +65,14 @@ class PassengerActivity : AppCompatActivity() {
                     val response = ApiClient.apiService.requestRide(rideRequest)
                     if (response.isSuccessful) {
                         Toast.makeText(this@PassengerActivity, "Ride successfully requested!", Toast.LENGTH_LONG).show()
+
+                        // ✅ Set local ride state as active
+                        setRideActiveState(true)
+
                         val intent = Intent(this@PassengerActivity, MainActivity::class.java)
                         startActivity(intent)
                         finish()
-
-                    } else {
+                    }else {
                         Toast.makeText(this@PassengerActivity, "Request failed: ${response.code()}", Toast.LENGTH_LONG).show()
                     }
                 } catch (e: Exception) {
@@ -80,5 +84,12 @@ class PassengerActivity : AppCompatActivity() {
             finish()
         }
 
+
+    }
+
+    private fun setRideActiveState(isActive: Boolean) {
+        getSharedPreferences("SafeRidesPrefs", MODE_PRIVATE).edit {
+            putBoolean("hasActiveRide", isActive)
+        }
     }
 }

@@ -6,15 +6,18 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.edit
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.lifecycleScope
-import com.example.saferidesapplication.network.ApiClient
-import kotlinx.coroutines.launch
+import com.example.saferidesapplication.network.dto.RideResponse
+import com.google.firebase.firestore.ListenerRegistration
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
 
 class RideTimelineFragment : Fragment() {
 
     private lateinit var steps: Map<String, TextView>
     private lateinit var passengerId: String
+    private var rideListener: ListenerRegistration? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -40,26 +43,66 @@ class RideTimelineFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        fetchAndDisplayRideStatus()
+        listenToRideStatus()
     }
 
-    private fun fetchAndDisplayRideStatus() {
-        lifecycleScope.launch {
-            try {
-                val response = ApiClient.apiService.getAllRides()
-                if (response.isSuccessful) {
-                    val rides = response.body() ?: emptyList()
-                    val myRide = rides.find {
-                        it.passengerId == passengerId &&
-                                it.status in listOf("queued", "assigned", "arrived", "picked_up", "completed")
-                    }
+    override fun onPause() {
+        super.onPause()
+        rideListener?.remove()
+    }
 
-                    highlightStep(myRide?.status ?: "none")
+    private fun listenToRideStatus() {
+        val db = Firebase.firestore
+        val ridesRef = db.collection("rides")
+
+        rideListener?.remove()
+
+        rideListener = ridesRef
+            .whereEqualTo("passengerId", passengerId)
+            .orderBy("timestamp")
+            .addSnapshotListener { snapshots, error ->
+                if (error != null || snapshots == null) {
+                    setRideActiveState(false)
+                    showNoRideMessage()
+                    return@addSnapshotListener
                 }
-            } catch (e: Exception) {
-                highlightStep("none")
+
+                val myRide = snapshots.documents.lastOrNull()?.toObject(RideResponse::class.java)
+
+                if (myRide != null && myRide.status in listOf("queued", "assigned", "arrived", "picked_up")) {
+                    setRideActiveState(true)
+                    showTimelineAndHighlight(myRide.status)
+                } else if (myRide != null && myRide.status == "completed") {
+                    setRideActiveState(false)
+                    showTimelineAndHighlight("completed")
+
+                    // Delay hiding the timeline after 2.5 seconds
+                    view?.postDelayed({
+                        showNoRideMessage()
+                    }, 2500)
+                } else {
+                    setRideActiveState(false)
+                    showNoRideMessage()
+                }
             }
+    }
+
+    private fun setRideActiveState(isActive: Boolean) {
+        requireActivity().getSharedPreferences("SafeRidesPrefs", AppCompatActivity.MODE_PRIVATE).edit {
+            putBoolean("hasActiveRide", isActive)
         }
+    }
+
+
+    private fun showTimelineAndHighlight(status: String) {
+        view?.findViewById<View>(R.id.timelineLayout)?.visibility = View.VISIBLE
+        view?.findViewById<View>(R.id.noRideMessage)?.visibility = View.GONE
+        highlightStep(status)
+    }
+
+    private fun showNoRideMessage() {
+        view?.findViewById<View>(R.id.timelineLayout)?.visibility = View.GONE
+        view?.findViewById<View>(R.id.noRideMessage)?.visibility = View.VISIBLE
     }
 
     private fun highlightStep(currentStatus: String) {

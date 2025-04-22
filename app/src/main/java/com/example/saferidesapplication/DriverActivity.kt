@@ -80,20 +80,37 @@ class DriverActivity : ComponentActivity() {
         val db = Firebase.firestore
         rideListenerRegistration = db.collection("rides")
             .addSnapshotListener { snapshot, error ->
-                if (error != null || snapshot == null) return@addSnapshotListener
+                if (error != null || snapshot == null) {
+                    Toast.makeText(this, "Failed to fetch rides", Toast.LENGTH_SHORT).show()
+                    return@addSnapshotListener
+                }
 
-                val rides = snapshot.toObjects(com.example.saferidesapplication.network.dto.RideResponse::class.java)
+                val updatedRides = snapshot.toObjects(com.example.saferidesapplication.network.dto.RideResponse::class.java)
                     .filter {
-                        it.status == "queued" || (it.driverId == driverId && it.status in listOf("assigned", "arrived", "in_progress"))
+                        it.status == "queued" ||
+                                (it.driverId == driverId && it.status in listOf("assigned", "arrived", "in_progress"))
                     }
                     .sortedBy { it.timestamp }
 
-                rideQueueAdapter.updateData(rides)
+                // Only update adapter if list changed (optional optimization)
+                rideQueueAdapter.updateData(updatedRides)
                 rideQueueAdapter.notifyDataSetChanged()
 
-                findViewById<Button>(R.id.hereButton).visibility = if (rides.isNotEmpty()) Button.VISIBLE else Button.GONE
+                updateActionButtonVisibility(updatedRides)
             }
     }
+
+    private fun updateActionButtonVisibility(rides: List<com.example.saferidesapplication.network.dto.RideResponse>) {
+        val hasRelevantRides = rides.any {
+            it.status == "queued" ||
+                    (it.driverId == driverId && it.status in listOf("assigned", "arrived", "in_progress"))
+        }
+
+        findViewById<Button>(R.id.hereButton).visibility =
+            if (hasRelevantRides) Button.VISIBLE else Button.GONE
+    }
+
+
 
     private fun assignNextRide(button: Button) {
         button.isEnabled = false

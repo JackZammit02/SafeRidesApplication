@@ -15,17 +15,23 @@ import com.example.saferidesapplication.network.dto.CancelRideRequest
 import com.example.saferidesapplication.network.dto.CreateUserRequest
 import com.example.saferidesapplication.network.dto.CreateUserResponse
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import androidx.core.content.edit
+import com.google.firebase.Firebase
+import com.google.firebase.firestore.ListenerRegistration
+import com.google.firebase.firestore.firestore
 
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var viewPager: ViewPager2
     private lateinit var passengerId: String
-    private var pollingJob: Job? = null
+
+    private val db = Firebase.firestore
+    private var rideListener: ListenerRegistration? = null
+    private var driverListener: ListenerRegistration? = null
+
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -56,7 +62,9 @@ class MainActivity : AppCompatActivity() {
             cancelActiveRide()
         }
 
-        startPollingQueue()
+        listenToDrivers()
+        listenToRides()
+
     }
 
     private fun registerPassenger(onSuccess: (() -> Unit)? = null) {
@@ -105,6 +113,7 @@ class MainActivity : AppCompatActivity() {
 
                     if (cancelResponse.isSuccessful) {
                         Toast.makeText(this@MainActivity, "Ride cancelled", Toast.LENGTH_SHORT).show()
+                        setRideActiveState(false)
                     } else {
                         Toast.makeText(this@MainActivity, "Cancel failed", Toast.LENGTH_LONG).show()
                     }
@@ -115,7 +124,19 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    @SuppressLint("CutPasteId", "SetTextI18n")
+    private fun setRideActiveState(isActive: Boolean) {
+        getSharedPreferences("SafeRidesPrefs", MODE_PRIVATE).edit {
+            putBoolean("hasActiveRide", isActive)
+        }
+    }
+
+    private fun getRideActiveState(): Boolean {
+        return getSharedPreferences("SafeRidesPrefs", MODE_PRIVATE)
+            .getBoolean("hasActiveRide", false)
+    }
+
+
+    @SuppressLint("SetTextI18n")
     private suspend fun updateDriverStatusAndRideButton() {
         try {
             val driverStatusTextView: TextView = findViewById(R.id.driverAvailabilityStatusTextView)
@@ -128,8 +149,11 @@ class MainActivity : AppCompatActivity() {
 
                 driverStatusTextView.text = "${activeDrivers.size} drivers on shift"
 
-                passengerButton.isEnabled = activeDrivers.isNotEmpty()
-                passengerButton.alpha = if (activeDrivers.isNotEmpty()) 1f else 0.5f
+                val hasActiveRide = getRideActiveState()
+                val canRequestRide = activeDrivers.isNotEmpty() && !hasActiveRide
+
+                passengerButton.isEnabled = canRequestRide
+                passengerButton.alpha = if (canRequestRide) 1f else 0.5f
 
             } else {
                 driverStatusTextView.text = "Error fetching driver status"
@@ -144,6 +168,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
+
 
     @SuppressLint("SetTextI18n")
     private suspend fun updatePassengerQueuePosition() {
@@ -167,20 +192,54 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun listenToDrivers() {
+        driverListener?.remove()  // Avoid multiple listeners
+        driverListener = db.collection("users")
+            .whereEqualTo("role", "driver")
+            .addSnapshotListener { snapshot, error ->
+                if (error != null || snapshot == null) return@addSnapshotListener
 
-    private fun startPollingQueue() {
-        pollingJob?.cancel()
-        pollingJob = lifecycleScope.launch {
-            while (isActive) {
-                updateDriverStatusAndRideButton()
-                updatePassengerQueuePosition()  // 👈 Add this
-                delay(5000)
+                val activeDrivers = snapshot.documents
+                    .mapNotNull { it.getBoolean("onShift") }
+                    .count { it }
+
+                val driverStatusTextView: TextView = findViewById(R.id.driverAvailabilityStatusTextView)
+                val passengerButton: Button = findViewById(R.id.passengerButton)
+
+                driverStatusTextView.text = "$activeDrivers drivers on shift"
+
+                val canRequestRide = activeDrivers > 0 && !getRideActiveState()
+                passengerButton.isEnabled = canRequestRide
+                passengerButton.alpha = if (canRequestRide) 1f else 0.5f
             }
-        }
     }
+
+    private fun listenToRides() {
+        rideListener?.remove()
+        rideListener = db.collection("rides")
+            .whereEqualTo("status", "queued")
+            .addSnapshotListener { snapshot, error ->
+                if (error != null || snapshot == null) return@addSnapshotListener
+
+                val rides = snapshot.toObjects(com.example.saferidesapplication.network.dto.RideResponse::class.java)
+                    .sortedBy { it.timestamp }
+
+                val myPosition = rides.indexOfFirst { it.passengerId == passengerId } + 1
+                val statusTextView: TextView = findViewById(R.id.passengerRideStatusTextView)
+
+                if (myPosition > 0) {
+                    statusTextView.text = "Your ride is in position: $myPosition"
+                } else {
+                    statusTextView.text = "You are not in the queue"
+                }
+            }
+    }
+
 
     override fun onDestroy() {
         super.onDestroy()
-        pollingJob?.cancel()
+        rideListener?.remove()
+        driverListener?.remove()
     }
+
 }
