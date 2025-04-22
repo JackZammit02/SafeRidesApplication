@@ -30,7 +30,7 @@ class RideTimelineFragment : Fragment() {
             "queued" to view.findViewById(R.id.timelineStepQueued),
             "assigned" to view.findViewById(R.id.timelineStepAssigned),
             "arrived" to view.findViewById(R.id.timelineStepArrived),
-            "picked_up" to view.findViewById(R.id.timelineStepPickedUp),
+            "in_progress" to view.findViewById(R.id.timelineStepPickedUp),
             "completed" to view.findViewById(R.id.timelineStepCompleted)
         )
 
@@ -69,7 +69,7 @@ class RideTimelineFragment : Fragment() {
 
                 val myRide = snapshots.documents.lastOrNull()?.toObject(RideResponse::class.java)
 
-                if (myRide != null && myRide.status in listOf("queued", "assigned", "arrived", "picked_up")) {
+                if (myRide != null && myRide.status in listOf("queued", "assigned", "arrived", "in_progress")) {
                     setRideActiveState(true)
                     showTimelineAndHighlight(myRide.status)
                 } else if (myRide != null && myRide.status == "completed") {
@@ -106,7 +106,7 @@ class RideTimelineFragment : Fragment() {
     }
 
     private fun highlightStep(currentStatus: String) {
-        val order = listOf("queued", "assigned", "arrived", "picked_up", "completed")
+        val order = listOf("queued", "assigned", "arrived", "in_progress", "completed")
         val activeIndex = order.indexOf(currentStatus)
 
         steps.forEach { (status, textView) ->
