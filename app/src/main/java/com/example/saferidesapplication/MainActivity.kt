@@ -21,7 +21,6 @@ import com.google.firebase.Firebase
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.firestore
 
-
 class MainActivity : AppCompatActivity() {
 
     private lateinit var viewPager: ViewPager2
@@ -31,15 +30,17 @@ class MainActivity : AppCompatActivity() {
     private var rideListener: ListenerRegistration? = null
     private var driverListener: ListenerRegistration? = null
 
-
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        viewPager = findViewById(R.id.viewPager)
-        viewPager.adapter = PassengerPagerAdapter(this) // must come BEFORE
+        // Reset hasActiveRide for debug purposes
+        getSharedPreferences("SafeRidesPrefs", MODE_PRIVATE).edit {
+            putBoolean("hasActiveRide", false)
+        }
 
+        viewPager = findViewById(R.id.viewPager)
+        viewPager.adapter = PassengerPagerAdapter(this)
 
         val driverButton: Button = findViewById(R.id.driverButton)
         val passengerButton: Button = findViewById(R.id.passengerButton)
@@ -47,6 +48,8 @@ class MainActivity : AppCompatActivity() {
 
         val sharedPreferences = getSharedPreferences("SafeRidesPrefs", MODE_PRIVATE)
         passengerId = sharedPreferences.getString("userId", null) ?: "unknown"
+
+        Log.d("MainActivity", "passengerId: $passengerId")
 
         driverButton.setOnClickListener {
             val intent = Intent(this, AccessCodeActivity::class.java)
@@ -64,7 +67,6 @@ class MainActivity : AppCompatActivity() {
 
         listenToDrivers()
         listenToRides()
-
     }
 
     private fun registerPassenger(onSuccess: (() -> Unit)? = null) {
@@ -78,7 +80,8 @@ class MainActivity : AppCompatActivity() {
                     val userId = responseBody.userId
 
                     getSharedPreferences("SafeRidesPrefs", MODE_PRIVATE)
-                        .edit() { putString("userId", userId) }
+                        .edit { putString("userId", userId) }
+
 
                     passengerId = userId
                     onSuccess?.invoke()
@@ -135,80 +138,27 @@ class MainActivity : AppCompatActivity() {
             .getBoolean("hasActiveRide", false)
     }
 
-
-    @SuppressLint("SetTextI18n")
-    private suspend fun updateDriverStatusAndRideButton() {
-        try {
-            val driverStatusTextView: TextView = findViewById(R.id.driverAvailabilityStatusTextView)
-            val passengerButton: Button = findViewById(R.id.passengerButton)
-
-            val response = ApiClient.apiService.getAllDrivers()
-            if (response.isSuccessful) {
-                val drivers = response.body() ?: emptyList()
-                val activeDrivers = drivers.filter { it.onShift == true }
-
-                driverStatusTextView.text = "${activeDrivers.size} drivers on shift"
-
-                val hasActiveRide = getRideActiveState()
-                val canRequestRide = activeDrivers.isNotEmpty() && !hasActiveRide
-
-                passengerButton.isEnabled = canRequestRide
-                passengerButton.alpha = if (canRequestRide) 1f else 0.5f
-
-            } else {
-                driverStatusTextView.text = "Error fetching driver status"
-                passengerButton.isEnabled = false
-                passengerButton.alpha = 0.5f
-            }
-        } catch (e: Exception) {
-            findViewById<TextView>(R.id.driverAvailabilityStatusTextView).text = "Network error"
-            findViewById<Button>(R.id.passengerButton).apply {
-                isEnabled = false
-                alpha = 0.5f
-            }
-        }
-    }
-
-
-    @SuppressLint("SetTextI18n")
-    private suspend fun updatePassengerQueuePosition() {
-        try {
-            val response = ApiClient.apiService.getAllRides()
-            if (response.isSuccessful) {
-                val rides = response.body() ?: emptyList()
-                val queuedRides = rides.filter { it.status == "queued" }.sortedBy { it.timestamp }
-
-                val myPosition = queuedRides.indexOfFirst { it.passengerId == passengerId } + 1
-                val statusTextView: TextView = findViewById(R.id.passengerRideStatusTextView)
-
-                if (myPosition > 0) {
-                    statusTextView.text = "Your ride is in position: $myPosition"
-                } else {
-                    statusTextView.text = "You are not in the queue"
-                }
-            }
-        } catch (e: Exception) {
-            Log.e("MainActivity", "Failed to update queue position: ${e.message}")
-        }
-    }
-
     private fun listenToDrivers() {
-        driverListener?.remove()  // Avoid multiple listeners
+        driverListener?.remove()
         driverListener = db.collection("users")
             .whereEqualTo("role", "driver")
             .addSnapshotListener { snapshot, error ->
                 if (error != null || snapshot == null) return@addSnapshotListener
 
+                val driverStatusTextView: TextView = findViewById(R.id.driverAvailabilityStatusTextView)
+                val passengerButton: Button = findViewById(R.id.passengerButton)
+
+                Log.d("MainActivity", "Driver snapshot received: ${snapshot.documents.map { it.data }}")
+
                 val activeDrivers = snapshot.documents
                     .mapNotNull { it.getBoolean("onShift") }
                     .count { it }
 
-                val driverStatusTextView: TextView = findViewById(R.id.driverAvailabilityStatusTextView)
-                val passengerButton: Button = findViewById(R.id.passengerButton)
+                val canRequestRide = activeDrivers > 0 && !getRideActiveState()
+
+                Log.d("MainActivity", "activeDrivers=$activeDrivers, hasActiveRide=${getRideActiveState()}, canRequest=$canRequestRide")
 
                 driverStatusTextView.text = "$activeDrivers drivers on shift"
-
-                val canRequestRide = activeDrivers > 0 && !getRideActiveState()
                 passengerButton.isEnabled = canRequestRide
                 passengerButton.alpha = if (canRequestRide) 1f else 0.5f
             }
@@ -235,11 +185,9 @@ class MainActivity : AppCompatActivity() {
             }
     }
 
-
     override fun onDestroy() {
         super.onDestroy()
         rideListener?.remove()
         driverListener?.remove()
     }
-
 }
