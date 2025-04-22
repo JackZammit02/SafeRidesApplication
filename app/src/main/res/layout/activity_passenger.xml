@@ -14,38 +14,44 @@
         android:alpha="0.6"
         android:contentDescription="Campus background" />
 
-    <!-- Content -->
-
-    <!-- Bottom Button Bar -->
-    <LinearLayout
+    <!-- Title at the top -->
+    <TextView
+        android:id="@+id/pageTitle"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:gravity="top|center_horizontal"
-        android:orientation="vertical"
-        android:padding="24dp">
+        android:layout_height="wrap_content"
+        android:layout_marginTop="40dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginEnd="24dp"
+        android:gravity="center"
+        android:shadowColor="#80000000"
+        android:shadowDx="10"
+        android:shadowDy="10"
+        android:shadowRadius="10"
+        android:text="Request a Ride"
+        android:textColor="@android:color/white"
+        android:textSize="40sp"
+        android:textStyle="bold" />
 
-        <!-- Title -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:gravity="center"
-            android:shadowColor="#80000000"
-            android:shadowDx="10"
-            android:shadowDy="10"
-            android:shadowRadius="10"
-            android:text="Request a Ride"
-            android:textColor="@android:color/white"
-            android:textSize="40sp"
-            android:textStyle="bold" />
+    <!-- Board with Spinners -->
+    <LinearLayout
+        android:id="@+id/dropdownBoard"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:layout_marginStart="24dp"
+        android:layout_marginEnd="24dp"
+        android:layout_marginBottom="120dp"
+        android:orientation="vertical"
+        android:padding="24dp"
+        android:background="@drawable/board_background"
+        android:elevation="8dp">
 
         <!-- Pickup -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
             android:text="Pickup Location"
-            android:textColor="@android:color/white"
+            android:textColor="@android:color/black"
             android:textSize="16sp" />
 
         <Spinner
@@ -59,7 +65,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Drop-off Location"
-            android:textColor="@android:color/white"
+            android:textColor="@android:color/black"
             android:textSize="16sp" />
 
         <Spinner
@@ -73,16 +79,16 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Number of Passengers"
-            android:textColor="@android:color/white"
+            android:textColor="@android:color/black"
             android:textSize="16sp" />
 
         <Spinner
             android:id="@+id/passengerCountSpinner"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="80dp" />
+            android:layout_height="wrap_content" />
     </LinearLayout>
 
+    <!-- Bottom Button Bar -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
