@@ -260,8 +260,8 @@ class DriverActivity : ComponentActivity() {
 
 
     private fun cancelCurrentRide() {
-        if (currentStage >= 2) { // Stage 2 is "picked_up" or beyond
-            Toast.makeText(this@DriverActivity, "Cannot cancel — ride already in progress", Toast.LENGTH_SHORT).show()
+        if (currentStage != 2 || !cancelRideButton.isEnabled) {
+            Toast.makeText(this@DriverActivity, "Cannot cancel — ride not eligible for no-show", Toast.LENGTH_SHORT).show()
             cancelRideButton.text = "Cancel Ride (No Show)"
             cancelRideButton.isEnabled = false
             cancelRideButton.alpha = 0.5f
@@ -283,6 +283,7 @@ class DriverActivity : ComponentActivity() {
                     cancelRideButton.text = "Cancel Ride (No Show)"
                     cancelRideButton.isEnabled = false
                     cancelRideButton.alpha = 0.5f
+                    cancelRideButton.visibility = View.GONE
                     findViewById<Button>(R.id.hereButton).text = "Next Ride"
                 } else {
                     Toast.makeText(this@DriverActivity, "Failed to cancel ride", Toast.LENGTH_SHORT).show()
@@ -292,6 +293,7 @@ class DriverActivity : ComponentActivity() {
             }
         }
     }
+
 
 
     override fun onDestroy() {
