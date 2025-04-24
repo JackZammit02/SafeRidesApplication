@@ -31,6 +31,9 @@ class DriverActivity : ComponentActivity() {
     private var arrivalCountdownJob: Job? = null
     private lateinit var cancelRideButton: Button
 
+    private var inactivityJob: Job? = null
+    private val inactivityTimeoutMs = 10 * 60 * 1000L // 10 minutes
+
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -47,6 +50,8 @@ class DriverActivity : ComponentActivity() {
 
 
         listenToRideQueue()
+        resetInactivityTimer()
+
 
         val endShiftButton: Button = findViewById(R.id.endShiftButton)
         val actionButton: Button = findViewById(R.id.hereButton)
@@ -296,11 +301,46 @@ class DriverActivity : ComponentActivity() {
         }
     }
 
+    override fun onUserInteraction() {
+        super.onUserInteraction()
+        resetInactivityTimer()
+    }
+
+    private fun resetInactivityTimer() {
+        inactivityJob?.cancel()
+        inactivityJob = lifecycleScope.launch {
+            delay(inactivityTimeoutMs)
+            autoLogoutDriver()
+        }
+    }
+
+    private fun autoLogoutDriver() {
+        lifecycleScope.launch {
+            try {
+                val response = apiService.logoutDriver(driverId)
+                if (response.isSuccessful) {
+                    Toast.makeText(this@DriverActivity, "Logged out due to inactivity", Toast.LENGTH_LONG).show()
+                    val intent = Intent(this@DriverActivity, MainActivity::class.java)
+                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    startActivity(intent)
+                    finish()
+                } else {
+                    Toast.makeText(this@DriverActivity, "Auto-logout failed (backend)", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(this@DriverActivity, "Error: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+
 
 
     override fun onDestroy() {
         super.onDestroy()
         rideListenerRegistration?.remove()
         arrivalCountdownJob?.cancel()
+        inactivityJob?.cancel()
+
     }
 }
