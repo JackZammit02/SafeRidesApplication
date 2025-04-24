@@ -167,14 +167,15 @@ class MainActivity : AppCompatActivity() {
     private fun listenToRides() {
         rideListener?.remove()
         rideListener = db.collection("rides")
-            .whereEqualTo("status", "queued")
+            .whereEqualTo("passengerId", passengerId)
             .addSnapshotListener { snapshot, error ->
                 if (error != null || snapshot == null) return@addSnapshotListener
 
                 val rides = snapshot.toObjects(com.example.saferidesapplication.network.dto.RideResponse::class.java)
+                    .filter { it.status != "cancelled" }
                     .sortedBy { it.timestamp }
 
-                val myPosition = rides.indexOfFirst { it.passengerId == passengerId } + 1
+                val myPosition = rides.indexOfFirst { it.status == "queued" } + 1
                 val statusTextView: TextView = findViewById(R.id.passengerRideStatusTextView)
 
                 if (myPosition > 0) {
