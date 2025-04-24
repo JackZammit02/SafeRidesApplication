@@ -107,7 +107,7 @@ class RideQueueAdapter(
             visibleRides.addAll(assignedToDriver + shownQueued)
         } else {
             val passengerRides = newRides.filter {
-                it.passengerId == currentUserId && it.status != "completed"
+                it.passengerId == currentUserId && it.status !in listOf("completed", "cancelled")
             }.sortedBy { it.timestamp }
 
             visibleRides.addAll(passengerRides)
