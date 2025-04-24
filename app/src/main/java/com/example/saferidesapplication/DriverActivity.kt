@@ -286,6 +286,8 @@ class DriverActivity : ComponentActivity() {
                     cancelRideButton.visibility = View.GONE
                     findViewById<Button>(R.id.hereButton).text = "Next Ride"
                 } else {
+                    val errorBody = response.errorBody()?.string()
+                    android.util.Log.e("CANCEL_RIDE", "Failed with code ${response.code()} — $errorBody")
                     Toast.makeText(this@DriverActivity, "Failed to cancel ride", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
