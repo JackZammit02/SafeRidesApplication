@@ -14,7 +14,6 @@ import com.example.saferidesapplication.network.ApiClient
 import com.example.saferidesapplication.network.dto.CancelRideRequest
 import com.example.saferidesapplication.network.dto.CreateUserRequest
 import com.example.saferidesapplication.network.dto.CreateUserResponse
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import androidx.core.content.edit
 import com.google.firebase.Firebase
@@ -30,6 +29,9 @@ class MainActivity : AppCompatActivity() {
     private var rideListener: ListenerRegistration? = null
     private var driverListener: ListenerRegistration? = null
 
+    private lateinit var cancelRideButton: Button
+    private lateinit var passengerButton: Button
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -43,8 +45,8 @@ class MainActivity : AppCompatActivity() {
         viewPager.adapter = PassengerPagerAdapter(this)
 
         val driverButton: Button = findViewById(R.id.driverButton)
-        val passengerButton: Button = findViewById(R.id.passengerButton)
-        val cancelRideButton: Button = findViewById(R.id.cancelRideButton)
+        passengerButton = findViewById(R.id.passengerButton)
+        cancelRideButton = findViewById(R.id.cancelRideButton)
 
         val sharedPreferences = getSharedPreferences("SafeRidesPrefs", MODE_PRIVATE)
         passengerId = sharedPreferences.getString("userId", null) ?: "unknown"
@@ -82,7 +84,6 @@ class MainActivity : AppCompatActivity() {
                     getSharedPreferences("SafeRidesPrefs", MODE_PRIVATE)
                         .edit { putString("userId", userId) }
 
-
                     passengerId = userId
                     onSuccess?.invoke()
 
@@ -117,6 +118,9 @@ class MainActivity : AppCompatActivity() {
                     if (cancelResponse.isSuccessful) {
                         Toast.makeText(this@MainActivity, "Ride cancelled", Toast.LENGTH_SHORT).show()
                         setRideActiveState(false)
+                        cancelRideButton.visibility = Button.GONE
+                        passengerButton.isEnabled = true
+                        passengerButton.alpha = 1f
                     } else {
                         Toast.makeText(this@MainActivity, "Cancel failed", Toast.LENGTH_LONG).show()
                     }
@@ -146,7 +150,6 @@ class MainActivity : AppCompatActivity() {
                 if (error != null || snapshot == null) return@addSnapshotListener
 
                 val driverStatusTextView: TextView = findViewById(R.id.driverAvailabilityStatusTextView)
-                val passengerButton: Button = findViewById(R.id.passengerButton)
 
                 Log.d("MainActivity", "Driver snapshot received: ${snapshot.documents.map { it.data }}")
 
@@ -175,16 +178,28 @@ class MainActivity : AppCompatActivity() {
                     .filter { it.status != "cancelled" }
                     .sortedBy { it.timestamp }
 
-                val myPosition = rides.indexOfFirst { it.status == "queued" } + 1
                 val statusTextView: TextView = findViewById(R.id.passengerRideStatusTextView)
 
-                if (myPosition > 0) {
+                val activeRide = rides.find { it.status in listOf("queued", "assigned", "arrived", "in_progress") }
+                val hasActiveRide = activeRide != null
+
+                setRideActiveState(hasActiveRide)
+
+                if (hasActiveRide) {
+                    val myPosition = rides.indexOf(activeRide) + 1
                     statusTextView.text = "Your ride is in position: $myPosition"
+                    cancelRideButton.visibility = Button.VISIBLE
+                    passengerButton.isEnabled = false
+                    passengerButton.alpha = 0.5f
                 } else {
                     statusTextView.text = "You are not in the queue"
+                    cancelRideButton.visibility = Button.GONE
+                    passengerButton.isEnabled = true
+                    passengerButton.alpha = 1f
                 }
             }
     }
+
 
     override fun onDestroy() {
         super.onDestroy()

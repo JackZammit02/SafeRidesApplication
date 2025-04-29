@@ -142,7 +142,7 @@ class DriverActivity : ComponentActivity() {
                     currentRideId = ride.rideId
                     currentStage = 1
                     button.text = "At Pick-Up"
-                    button.setBackgroundColor(Color.YELLOW)
+                    button.setBackgroundResource(R.drawable.rounded_rectangle)
                     Toast.makeText(this@DriverActivity, "Assigned ride: ${ride.rideId}", Toast.LENGTH_SHORT).show()
                 } else {
                     Toast.makeText(this@DriverActivity, "No rides to assign", Toast.LENGTH_SHORT).show()
