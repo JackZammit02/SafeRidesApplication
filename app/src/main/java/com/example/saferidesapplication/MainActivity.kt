@@ -1,6 +1,5 @@
 package com.example.saferidesapplication
 
-import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -8,18 +7,18 @@ import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.edit
 import androidx.lifecycle.lifecycleScope
 import androidx.viewpager2.widget.ViewPager2
 import com.example.saferidesapplication.network.ApiClient
 import com.example.saferidesapplication.network.dto.CancelRideRequest
 import com.example.saferidesapplication.network.dto.CreateUserRequest
 import com.example.saferidesapplication.network.dto.CreateUserResponse
-import kotlinx.coroutines.launch
-import androidx.core.content.edit
 import com.example.saferidesapplication.network.dto.RideResponse
-import com.google.firebase.Firebase
 import com.google.firebase.firestore.ListenerRegistration
-import com.google.firebase.firestore.firestore
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
+import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
 
@@ -33,8 +32,6 @@ class MainActivity : AppCompatActivity() {
     private var activeDriversCount = 0
     private var hasActiveRide = false
     private var switchingDriversCount = 0
-
-
 
     private lateinit var cancelRideButton: Button
     private lateinit var passengerButton: Button
@@ -57,17 +54,14 @@ class MainActivity : AppCompatActivity() {
         val sharedPreferences = getSharedPreferences("SafeRidesPrefs", MODE_PRIVATE)
         val existingId = sharedPreferences.getString("passengerId", null)
 
-        if (existingId == null) {
-            registerPassenger()
-            return
-        } else {
+        if (existingId != null) {
             passengerId = existingId
+            setupAfterPassengerRegistered()
+        } else {
+            registerPassenger {
+                setupAfterPassengerRegistered()
+            }
         }
-
-        listenToDrivers()
-        listenToRides()
-
-        Log.d("MainActivity", "passengerId: $passengerId")
 
         driverButton.setOnClickListener {
             val intent = Intent(this, AccessCodeActivity::class.java)
@@ -75,8 +69,18 @@ class MainActivity : AppCompatActivity() {
         }
 
         passengerButton.setOnClickListener {
-            val intent = Intent(this, PassengerActivity::class.java)
-            startActivity(intent)
+            val sharedPrefs = getSharedPreferences("SafeRidesPrefs", MODE_PRIVATE)
+            val existingPassengerId = sharedPrefs.getString("passengerId", null)
+
+            if (existingPassengerId == null) {
+                registerPassenger {
+                    val intent = Intent(this@MainActivity, PassengerActivity::class.java)
+                    startActivity(intent)
+                }
+            } else {
+                val intent = Intent(this@MainActivity, PassengerActivity::class.java)
+                startActivity(intent)
+            }
         }
 
         cancelRideButton.setOnClickListener {
@@ -84,6 +88,11 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun setupAfterPassengerRegistered() {
+        listenToDrivers()
+        listenToRides()
+        Log.d("MainActivity", "passengerId: $passengerId")
+    }
 
     private fun registerPassenger(onSuccess: (() -> Unit)? = null) {
         lifecycleScope.launch {
@@ -95,15 +104,13 @@ class MainActivity : AppCompatActivity() {
                     val responseBody = response.body() as CreateUserResponse
                     val userId = responseBody.userId
 
-                    getSharedPreferences("SafeRidesPrefs", MODE_PRIVATE)
-                        .edit { putString("passengerId", userId)
-                        }
+                    getSharedPreferences("SafeRidesPrefs", MODE_PRIVATE).edit {
+                        putString("passengerId", userId)
+                    }
 
                     passengerId = userId
                     onSuccess?.invoke()
 
-                    val intent = Intent(this@MainActivity, PassengerActivity::class.java)
-                    startActivity(intent)
                 } else {
                     Toast.makeText(this@MainActivity, "User creation failed", Toast.LENGTH_LONG).show()
                 }
@@ -188,25 +195,21 @@ class MainActivity : AppCompatActivity() {
             }
     }
 
-
-
-
     private fun listenToRides() {
         rideListener?.remove()
         rideListener = db.collection("rides")
-            .addSnapshotListener { snapshot, error -> // Remove whereEqualTo
+            .addSnapshotListener { snapshot, error ->
                 if (error != null || snapshot == null) return@addSnapshotListener
 
                 val allRides = snapshot.toObjects(RideResponse::class.java)
-                    .filter { it.status == "queued" || it.status == "assigned" || it.status == "arrived" || it.status == "in_progress" }
-                    .sortedWith(compareBy<RideResponse> { it.timestamp }.thenBy { it.rideId }) // ✅ Always consistent order
+                    .filter { it.status in listOf("queued", "assigned", "arrived", "in_progress") }
+                    .sortedWith(compareBy<RideResponse> { it.timestamp }.thenBy { it.rideId })
 
                 val statusTextView: TextView = findViewById(R.id.passengerRideStatusTextView)
 
                 val myRide = allRides.find { it.passengerId == passengerId }
 
                 hasActiveRide = myRide != null
-
                 setRideActiveState(hasActiveRide)
 
                 if (hasActiveRide && myRide != null) {
@@ -221,7 +224,6 @@ class MainActivity : AppCompatActivity() {
                 updatePassengerButtonState()
             }
     }
-
 
     private fun updatePassengerButtonState() {
         val canRequestRide = activeDriversCount > 0 && !hasActiveRide
@@ -241,9 +243,6 @@ class MainActivity : AppCompatActivity() {
             else -> "$activeDriversCount $driverWord on shift, $switchingDriversCount $switchingWord switching — please expect delays"
         }
     }
-
-
-
 
     override fun onDestroy() {
         super.onDestroy()
