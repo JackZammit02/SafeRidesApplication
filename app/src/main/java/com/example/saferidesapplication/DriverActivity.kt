@@ -23,7 +23,7 @@ class DriverActivity : ComponentActivity() {
     private lateinit var recyclerView: RecyclerView
     private lateinit var rideQueueAdapter: RideQueueAdapter
     private val driverId: String by lazy {
-        getSharedPreferences("SafeRidesPrefs", MODE_PRIVATE).getString("userId", "") ?: ""
+        getSharedPreferences("SafeRidesPrefs", MODE_PRIVATE).getString("driverId", "") ?: ""
     }
     private var rideListenerRegistration: ListenerRegistration? = null
     private var currentRideId: String? = null

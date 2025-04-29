@@ -43,7 +43,6 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // Reset hasActiveRide for debug purposes
         getSharedPreferences("SafeRidesPrefs", MODE_PRIVATE).edit {
             putBoolean("hasActiveRide", false)
         }
@@ -65,6 +64,9 @@ class MainActivity : AppCompatActivity() {
             passengerId = existingId
         }
 
+        listenToDrivers()
+        listenToRides()
+
         Log.d("MainActivity", "passengerId: $passengerId")
 
         driverButton.setOnClickListener {
@@ -80,10 +82,8 @@ class MainActivity : AppCompatActivity() {
         cancelRideButton.setOnClickListener {
             cancelActiveRide()
         }
-
-        listenToDrivers()
-        listenToRides()
     }
+
 
     private fun registerPassenger(onSuccess: (() -> Unit)? = null) {
         lifecycleScope.launch {
