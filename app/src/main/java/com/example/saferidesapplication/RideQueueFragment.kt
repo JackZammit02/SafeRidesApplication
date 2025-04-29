@@ -26,7 +26,7 @@ class RideQueueFragment : Fragment() {
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
 
         val sharedPreferences = requireContext().getSharedPreferences("SafeRidesPrefs", 0)
-        val storedId = sharedPreferences.getString("userId", null)
+        val storedId = sharedPreferences.getString("passengerId", null)
 
         if (storedId == null || storedId == "unknown") {
             // If userId is missing or invalid, don’t listen to queue yet

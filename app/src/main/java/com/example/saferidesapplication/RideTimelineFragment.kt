@@ -36,7 +36,7 @@ class RideTimelineFragment : Fragment() {
 
         passengerId = requireActivity()
             .getSharedPreferences("SafeRidesPrefs", AppCompatActivity.MODE_PRIVATE)
-            .getString("userId", null) ?: "unknown"
+            .getString("passengerId", null) ?: "unknown"
 
         return view
     }
