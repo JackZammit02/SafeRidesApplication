@@ -41,8 +41,10 @@ class AccessCodeActivity : ComponentActivity() {
                     if (response.isSuccessful) {
                         getSharedPreferences("SafeRidesPrefs", MODE_PRIVATE)
                             .edit()
-                            .putString("userId", accessCode)
+                            .putString("driverId", accessCode)  // 🛡️ Save separately
+                            .remove("passengerId")  // 🧹 clear old passengerId if any
                             .apply()
+
 
                         val intent = Intent(this@AccessCodeActivity, DriverActivity::class.java)
                         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK

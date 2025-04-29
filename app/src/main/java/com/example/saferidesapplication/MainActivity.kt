@@ -96,7 +96,8 @@ class MainActivity : AppCompatActivity() {
                     val userId = responseBody.userId
 
                     getSharedPreferences("SafeRidesPrefs", MODE_PRIVATE)
-                        .edit { putString("userId", userId) }
+                        .edit { putString("passengerId", userId)
+                        }
 
                     passengerId = userId
                     onSuccess?.invoke()

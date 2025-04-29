@@ -22,9 +22,9 @@ class PassengerActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_passenger)
 
-        // Get passenger ID from shared preferences
         val sharedPreferences = getSharedPreferences("SafeRidesPrefs", MODE_PRIVATE)
-        passengerId = sharedPreferences.getString("userId", null) ?: "unknown"
+        passengerId = sharedPreferences.getString("passengerId", null) ?: "unknown"
+
 
         // Initialize UI elements
         pickupSpinner = findViewById(R.id.pickupSpinner)
