@@ -149,22 +149,34 @@ class MainActivity : AppCompatActivity() {
 
     private fun listenToDrivers() {
         driverListener?.remove()
-        driverListener = db.collection("users")
-            .whereEqualTo("role", "driver")
+        driverListener = db.collection("active_drivers")
+            .document("status")
             .addSnapshotListener { snapshot, error ->
-                if (error != null || snapshot == null) return@addSnapshotListener
+                if (error != null || snapshot == null || !snapshot.exists()) return@addSnapshotListener
 
                 val driverStatusTextView: TextView = findViewById(R.id.driverAvailabilityStatusTextView)
 
-                activeDriversCount = snapshot.documents
-                    .mapNotNull { it.getBoolean("onShift") }
-                    .count { it }
+                val driver1 = snapshot.get("driver1") as? Map<*, *>
+                val driver2 = snapshot.get("driver2") as? Map<*, *>
 
-                driverStatusTextView.text = "$activeDriversCount drivers on shift"
+                val drivers = listOfNotNull(driver1, driver2)
 
-                updatePassengerButtonState()  // <<<<<< centralized control
+                activeDriversCount = drivers.count { !(it["switching"] as? Boolean ?: false) }
+                val switchingDriversCount = drivers.count { (it["switching"] as? Boolean) == true }
+
+                Log.d("MainActivity", "Drivers active: $activeDriversCount, Drivers switching: $switchingDriversCount")
+
+                // Set the text dynamically
+                driverStatusTextView.text = when {
+                    switchingDriversCount == 0 -> "$activeDriversCount drivers on shift"
+                    switchingDriversCount == 1 -> "$activeDriversCount drivers on shift, 1 driver switching — please expect delays"
+                    else -> "$activeDriversCount drivers on shift, $switchingDriversCount drivers switching — please expect delays"
+                }
+
+                updatePassengerButtonState()
             }
     }
+
 
     private fun listenToRides() {
         rideListener?.remove()

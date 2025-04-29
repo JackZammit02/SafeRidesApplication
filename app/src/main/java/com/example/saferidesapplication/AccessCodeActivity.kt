@@ -52,6 +52,7 @@ class AccessCodeActivity : ComponentActivity() {
                         when (response.code()) {
                             403 -> showToast("Too many drivers are logged in.")
                             404 -> showToast("Access code not recognized.")
+                            409 -> showToast("Driver is already logged in.")
                             else -> showToast("Error: ${response.code()}")
                         }
                     }
