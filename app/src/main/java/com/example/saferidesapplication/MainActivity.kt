@@ -186,23 +186,23 @@ class MainActivity : AppCompatActivity() {
     private fun listenToRides() {
         rideListener?.remove()
         rideListener = db.collection("rides")
-            .whereEqualTo("passengerId", passengerId)
-            .addSnapshotListener { snapshot, error ->
+            .addSnapshotListener { snapshot, error -> // Remove whereEqualTo
                 if (error != null || snapshot == null) return@addSnapshotListener
 
-                val rides = snapshot.toObjects(RideResponse::class.java)
+                val allRides = snapshot.toObjects(RideResponse::class.java)
                     .filter { it.status == "queued" || it.status == "assigned" || it.status == "arrived" || it.status == "in_progress" }
-                    .sortedBy { it.timestamp }
+                    .sortedWith(compareBy<RideResponse> { it.timestamp }.thenBy { it.rideId }) // ✅ Always consistent order
 
                 val statusTextView: TextView = findViewById(R.id.passengerRideStatusTextView)
 
-                val activeRide = rides.find { it.status in listOf("queued", "assigned", "arrived", "in_progress") }
-                hasActiveRide = activeRide != null
+                val myRide = allRides.find { it.passengerId == passengerId }
+
+                hasActiveRide = myRide != null
 
                 setRideActiveState(hasActiveRide)
 
-                if (hasActiveRide) {
-                    val myPosition = rides.indexOf(activeRide) + 1
+                if (hasActiveRide && myRide != null) {
+                    val myPosition = allRides.indexOf(myRide) + 1
                     statusTextView.text = "Your ride is in position: $myPosition"
                     cancelRideButton.visibility = Button.VISIBLE
                 } else {
@@ -210,9 +210,10 @@ class MainActivity : AppCompatActivity() {
                     cancelRideButton.visibility = Button.GONE
                 }
 
-                updatePassengerButtonState() // <<<<<< centralized control
+                updatePassengerButtonState()
             }
     }
+
 
     private fun updatePassengerButtonState() {
         val canRequestRide = activeDriversCount > 0 && !hasActiveRide
