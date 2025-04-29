@@ -161,21 +161,33 @@ class MainActivity : AppCompatActivity() {
 
                 val drivers = listOfNotNull(driver1, driver2)
 
-                activeDriversCount = drivers.count { !(it["switching"] as? Boolean ?: false) }
-                val switchingDriversCount = drivers.count { (it["switching"] as? Boolean) == true }
+                activeDriversCount = drivers.count {
+                    val driverId = it["driverId"] as? String
+                    val switching = it["switching"] as? Boolean ?: false
+                    !driverId.isNullOrBlank() && !switching
+                }
 
-                Log.d("MainActivity", "Drivers active: $activeDriversCount, Drivers switching: $switchingDriversCount")
+                val switchingDriversCount = drivers.count {
+                    val driverId = it["driverId"] as? String
+                    val switching = it["switching"] as? Boolean ?: false
+                    !driverId.isNullOrBlank() && switching
+                }
 
-                // Set the text dynamically
+                Log.d("MainActivity", "Active drivers: $activeDriversCount, Switching drivers: $switchingDriversCount")
+
+                val driverWord = if (activeDriversCount == 1) "driver" else "drivers"
+                val switchingWord = if (switchingDriversCount == 1) "driver" else "drivers"
+
                 driverStatusTextView.text = when {
-                    switchingDriversCount == 0 -> "$activeDriversCount drivers on shift"
-                    switchingDriversCount == 1 -> "$activeDriversCount drivers on shift, 1 driver switching — please expect delays"
-                    else -> "$activeDriversCount drivers on shift, $switchingDriversCount drivers switching — please expect delays"
+                    switchingDriversCount == 0 -> "$activeDriversCount $driverWord on shift"
+                    switchingDriversCount == 1 -> "$activeDriversCount $driverWord on shift, 1 $switchingWord switching — please expect delays"
+                    else -> "$activeDriversCount $driverWord on shift, $switchingDriversCount $switchingWord switching — please expect delays"
                 }
 
                 updatePassengerButtonState()
             }
     }
+
 
 
     private fun listenToRides() {
