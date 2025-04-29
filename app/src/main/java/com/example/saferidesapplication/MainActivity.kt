@@ -32,6 +32,8 @@ class MainActivity : AppCompatActivity() {
 
     private var activeDriversCount = 0
     private var hasActiveRide = false
+    private var switchingDriversCount = 0
+
 
 
     private lateinit var cancelRideButton: Button
@@ -154,8 +156,6 @@ class MainActivity : AppCompatActivity() {
             .addSnapshotListener { snapshot, error ->
                 if (error != null || snapshot == null || !snapshot.exists()) return@addSnapshotListener
 
-                val driverStatusTextView: TextView = findViewById(R.id.driverAvailabilityStatusTextView)
-
                 val driver1 = snapshot.get("driver1") as? Map<*, *>
                 val driver2 = snapshot.get("driver2") as? Map<*, *>
 
@@ -167,7 +167,7 @@ class MainActivity : AppCompatActivity() {
                     !driverId.isNullOrBlank() && !switching
                 }
 
-                val switchingDriversCount = drivers.count {
+                switchingDriversCount = drivers.count {
                     val driverId = it["driverId"] as? String
                     val switching = it["switching"] as? Boolean ?: false
                     !driverId.isNullOrBlank() && switching
@@ -175,18 +175,11 @@ class MainActivity : AppCompatActivity() {
 
                 Log.d("MainActivity", "Active drivers: $activeDriversCount, Switching drivers: $switchingDriversCount")
 
-                val driverWord = if (activeDriversCount == 1) "driver" else "drivers"
-                val switchingWord = if (switchingDriversCount == 1) "driver" else "drivers"
-
-                driverStatusTextView.text = when {
-                    switchingDriversCount == 0 -> "$activeDriversCount $driverWord on shift"
-                    switchingDriversCount == 1 -> "$activeDriversCount $driverWord on shift, 1 $switchingWord switching — please expect delays"
-                    else -> "$activeDriversCount $driverWord on shift, $switchingDriversCount $switchingWord switching — please expect delays"
-                }
-
+                updateDriverStatusText()
                 updatePassengerButtonState()
             }
     }
+
 
 
 
@@ -226,6 +219,20 @@ class MainActivity : AppCompatActivity() {
         passengerButton.isEnabled = canRequestRide
         passengerButton.alpha = if (canRequestRide) 1f else 0.5f
     }
+
+    private fun updateDriverStatusText() {
+        val driverStatusTextView: TextView = findViewById(R.id.driverAvailabilityStatusTextView)
+
+        val driverWord = if (activeDriversCount == 1) "driver" else "drivers"
+        val switchingWord = if (switchingDriversCount == 1) "driver" else "drivers"
+
+        driverStatusTextView.text = when {
+            switchingDriversCount == 0 -> "$activeDriversCount $driverWord on shift"
+            switchingDriversCount == 1 -> "$activeDriversCount $driverWord on shift, 1 $switchingWord switching — please expect delays"
+            else -> "$activeDriversCount $driverWord on shift, $switchingDriversCount $switchingWord switching — please expect delays"
+        }
+    }
+
 
 
 
