@@ -106,15 +106,24 @@ class RideQueueAdapter(
 
             visibleRides.addAll(assignedToDriver + shownQueued)
         } else {
-            val passengerRides = newRides.filter {
+            // 🚀 Correct Passenger behavior
+            val activeRides = newRides.filter {
                 it.status in listOf("queued", "assigned", "arrived", "in_progress")
-            }.sortedBy { it.timestamp }
+            }
 
-            visibleRides.addAll(passengerRides)
+            val myRide = activeRides.find { it.passengerId == currentUserId }
+            val otherRides = activeRides.filterNot { it.passengerId == currentUserId }
+                .sortedBy { it.timestamp }
+
+            if (myRide != null) {
+                visibleRides.add(myRide) // 🔥 Pin your ride first
+            }
+            visibleRides.addAll(otherRides) // Then everyone else
             hasFooter = false
             hiddenCount = 0
         }
     }
+
 
 
 }
