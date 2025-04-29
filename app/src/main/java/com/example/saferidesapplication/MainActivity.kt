@@ -16,6 +16,7 @@ import com.example.saferidesapplication.network.dto.CreateUserRequest
 import com.example.saferidesapplication.network.dto.CreateUserResponse
 import kotlinx.coroutines.launch
 import androidx.core.content.edit
+import com.example.saferidesapplication.network.dto.RideResponse
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.firestore
@@ -174,8 +175,8 @@ class MainActivity : AppCompatActivity() {
             .addSnapshotListener { snapshot, error ->
                 if (error != null || snapshot == null) return@addSnapshotListener
 
-                val rides = snapshot.toObjects(com.example.saferidesapplication.network.dto.RideResponse::class.java)
-                    .filter { it.status != "cancelled" }
+                val rides = snapshot.toObjects(RideResponse::class.java)
+                    .filter { it.status == "queued" || it.status == "assigned" || it.status == "arrived" || it.status == "in_progress"}
                     .sortedBy { it.timestamp }
 
                 val statusTextView: TextView = findViewById(R.id.passengerRideStatusTextView)
