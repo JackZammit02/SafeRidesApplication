@@ -30,6 +30,10 @@ class MainActivity : AppCompatActivity() {
     private var rideListener: ListenerRegistration? = null
     private var driverListener: ListenerRegistration? = null
 
+    private var activeDriversCount = 0
+    private var hasActiveRide = false
+
+
     private lateinit var cancelRideButton: Button
     private lateinit var passengerButton: Button
 
@@ -152,19 +156,13 @@ class MainActivity : AppCompatActivity() {
 
                 val driverStatusTextView: TextView = findViewById(R.id.driverAvailabilityStatusTextView)
 
-                Log.d("MainActivity", "Driver snapshot received: ${snapshot.documents.map { it.data }}")
-
-                val activeDrivers = snapshot.documents
+                activeDriversCount = snapshot.documents
                     .mapNotNull { it.getBoolean("onShift") }
                     .count { it }
 
-                val canRequestRide = activeDrivers > 0 && !getRideActiveState()
+                driverStatusTextView.text = "$activeDriversCount drivers on shift"
 
-                Log.d("MainActivity", "activeDrivers=$activeDrivers, hasActiveRide=${getRideActiveState()}, canRequest=$canRequestRide")
-
-                driverStatusTextView.text = "$activeDrivers drivers on shift"
-                passengerButton.isEnabled = canRequestRide
-                passengerButton.alpha = if (canRequestRide) 1f else 0.5f
+                updatePassengerButtonState()  // <<<<<< centralized control
             }
     }
 
@@ -176,13 +174,13 @@ class MainActivity : AppCompatActivity() {
                 if (error != null || snapshot == null) return@addSnapshotListener
 
                 val rides = snapshot.toObjects(RideResponse::class.java)
-                    .filter { it.status == "queued" || it.status == "assigned" || it.status == "arrived" || it.status == "in_progress"}
+                    .filter { it.status == "queued" || it.status == "assigned" || it.status == "arrived" || it.status == "in_progress" }
                     .sortedBy { it.timestamp }
 
                 val statusTextView: TextView = findViewById(R.id.passengerRideStatusTextView)
 
                 val activeRide = rides.find { it.status in listOf("queued", "assigned", "arrived", "in_progress") }
-                val hasActiveRide = activeRide != null
+                hasActiveRide = activeRide != null
 
                 setRideActiveState(hasActiveRide)
 
@@ -190,15 +188,19 @@ class MainActivity : AppCompatActivity() {
                     val myPosition = rides.indexOf(activeRide) + 1
                     statusTextView.text = "Your ride is in position: $myPosition"
                     cancelRideButton.visibility = Button.VISIBLE
-                    passengerButton.isEnabled = false
-                    passengerButton.alpha = 0.5f
                 } else {
                     statusTextView.text = "You are not in the queue"
                     cancelRideButton.visibility = Button.GONE
-                    passengerButton.isEnabled = true
-                    passengerButton.alpha = 1f
                 }
+
+                updatePassengerButtonState() // <<<<<< centralized control
             }
+    }
+
+    private fun updatePassengerButtonState() {
+        val canRequestRide = activeDriversCount > 0 && !hasActiveRide
+        passengerButton.isEnabled = canRequestRide
+        passengerButton.alpha = if (canRequestRide) 1f else 0.5f
     }
 
 
