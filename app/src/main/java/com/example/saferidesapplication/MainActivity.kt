@@ -56,7 +56,7 @@ class MainActivity : AppCompatActivity() {
         cancelRideButton = findViewById(R.id.cancelRideButton)
 
         val sharedPreferences = getSharedPreferences("SafeRidesPrefs", MODE_PRIVATE)
-        val existingId = sharedPreferences.getString("userId", null)
+        val existingId = sharedPreferences.getString("passengerId", null)
 
         if (existingId == null) {
             registerPassenger()
