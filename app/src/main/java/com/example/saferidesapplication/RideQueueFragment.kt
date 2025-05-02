@@ -1,0 +1,60 @@
+package com.example.saferidesapplication
+
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.example.saferidesapplication.network.dto.RideResponse
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
+
+class RideQueueFragment : Fragment() {
+
+    private lateinit var recyclerView: RecyclerView
+    private lateinit var adapter: RideQueueAdapter
+    private lateinit var passengerId: String
+
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        val view = inflater.inflate(R.layout.fragment_ride_queue, container, false)
+        recyclerView = view.findViewById(R.id.rideQueueRecyclerView)
+        recyclerView.layoutManager = LinearLayoutManager(requireContext())
+
+        val sharedPreferences = requireContext().getSharedPreferences("SafeRidesPrefs", 0)
+        val storedId = sharedPreferences.getString("passengerId", null)
+
+        if (storedId == null || storedId == "unknown") {
+            // If userId is missing or invalid, don’t listen to queue yet
+            return view
+        }
+
+        passengerId = storedId
+
+        adapter = RideQueueAdapter(passengerId, isDriverView = false)
+
+        recyclerView.adapter = adapter
+
+        listenToRideQueueUpdates()
+
+        return view
+    }
+
+    private fun listenToRideQueueUpdates() {
+        val db = Firebase.firestore
+
+        db.collection("rides")
+            .addSnapshotListener { snapshot, error ->
+                if (error != null || snapshot == null) return@addSnapshotListener
+
+                val allRides = snapshot.toObjects(RideResponse::class.java)
+                adapter.updateData(allRides)
+                adapter.notifyDataSetChanged()
+            }
+    }
+
+}
